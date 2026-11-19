@@ -1,0 +1,52 @@
+{
+  "name": "sportshub-pc",
+  "version": "0.1.0",
+  "description": "赛事中心 PC 桌面壳（Electron）",
+  "main": "main.js",
+  "author": "SportsHub",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64",
+    "dist:portable": "electron-builder --win --x64 portable"
+  },
+  "devDependencies": {
+    "electron": "^31.7.6",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.sportshub.app",
+    "productName": "SportsHub",
+    "directories": {
+      "output": "../releases/pc"
+    },
+    "files": [
+      "main.js",
+      "proxy.js",
+      "resources/**"
+    ],
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "赛事中心",
+      "deleteAppDataOnUninstall": false
+    },
+    "compression": "normal"
+  }
+}
