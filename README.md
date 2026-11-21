@@ -1,8 +1,8 @@
 # 赛事中心 Sports Hub
 
-跨端体育赛事信息应用（v0.2.0）：单文件原生 JS 页面 + Electron 桌面壳 + 安卓 WebView 壳，数据经统一适配层多源接入。
+跨端体育赛事信息应用（v0.2.1）：单文件原生 JS 页面 + Electron 桌面壳 + 安卓 WebView 壳，数据经统一适配层多源接入。
 
-覆盖篮球（NBA / CBA / NCAA / WNBA / WCBA）、足球（英超 / 西甲 / 意甲 / 德甲 / 中超 / 城市联赛 / 欧冠 / 日职联 / 世界杯）、网球（WTA / ATP / 美网 / 温网 / 法网）、桌球、电竞（英雄联盟 / Dota2 / 王者荣耀 / CS2 / 穿越火线 / 守望先锋 2 等）。
+覆盖篮球（NBA / CBA / NCAA / WNBA / WCBA）、足球（英超 / 西甲 / 意甲 / 德甲 / 中超 / 城市联赛 / 欧冠 / 日职联 / 世界杯）、网球（WTA / ATP / 美网 / 温网 / 法网）、桌球（斯诺克）、电竞（英雄联盟 / Dota2 / 王者荣耀 / CS2 / 穿越火线 / 守望先锋 2 等）。
 
 ## 目录结构
 
@@ -25,7 +25,7 @@ SportsHub/
 | --- | --- | --- |
 | Web 原型 | 单文件 HTML | hash 路由、原生 JS、内联三语（简中/繁中/英文），浏览器直接打开 |
 | PC | Electron 桌面壳 | 加载本地页面；主进程内嵌拉起本地代理，宽屏窗口 |
-| 手机 | WebView 混合壳 APK | 系统 WebView 离线加载本地资源，不常驻后台；界面复用响应式布局 |
+| 手机 | WebView 混合壳 APK | 系统 WebView 离线加载本地资源；原生内嵌本地代理（Kotlin 复刻 Node 适配器），不依赖 Node 运行时或外部服务器；界面复用响应式布局 |
 
 ## 本地运行
 
@@ -41,7 +41,7 @@ SportsHub/
   npm install
   npm start               # 开发预览
   ```
-- **安卓**：用 Android Studio 打开 `mobile/android/`，或命令行 `./gradlew assembleRelease` 出 APK。
+- **安卓**：用 Android Studio 打开 `mobile/android/`，或命令行 `./gradlew assembleRelease` 出 APK；代理已在原生层内嵌复刻，手机端无需安装 Node。
 
 ## 数据源与适配层
 
@@ -64,4 +64,5 @@ PC 安装包 / 便携 exe / 绿色 zip 与安卓 APK 统一放在 `releases/`，
 
 - 日职联、WTA、美网 / 温网 / 法网的腾讯赛事 ID 待有赛程时补录。
 - CBA 等腾讯源暂无投篮坐标与逐回合动作流；足球球员名中文化待统一。
+- 斯诺克选手名 / 赛事名已落中文对照层；中文站实时赛程与排名互补链路待后续立项接入。
 - 当前 APK 为 debug 签名，正式发布前替换自有 release 签名密钥。

@@ -165,6 +165,7 @@ function mapCbaGame(row) {
 function cbaScheduleRows(games) {
   return games.map(g => ({
     date: g.dateKey, dateRaw: g.dateRaw || g.dateKey || '', utc8: g.utc8 || '',
+    localTime: g.localTime || '', localTz: g.localTz || '',
     home: g.home.name, homeEn: '',
     away: g.away.name, awayEn: '',
     city: g.city || '',
@@ -262,6 +263,7 @@ function mapWcbaGame(g) {
 function wcbaScheduleRows(games) {
   return games.map(g => ({
     date: g.dateKey, dateRaw: g.dateRaw || g.dateKey || '', utc8: g.utc8 || '',
+    localTime: g.localTime || '', localTz: g.localTz || '',
     home: g.home.name, homeEn: '',
     away: g.away.name, awayEn: '',
     city: g.city || '',
@@ -515,11 +517,12 @@ function txPlayerRankings(data, sport) {
   return out;
 }
 
-async function txGames(lid) {
+async function txGames(lid, offsets) {
   const cfg = TENCENT_LEAGUES[lid];
   if (!cfg || !cfg.cid) return [];
   if (lid === 'nba') return []; /* NBA 赛程走 ESPN，腾讯侧仅用于补球员榜 */
-  const dates = [0, 1, 2].map(txBjDate);
+  const off = Array.isArray(offsets) && offsets.length ? offsets : [0, 1, 2];
+  const dates = off.map(txBjDate);
   const settled = await Promise.allSettled(dates.map(async date => {
     const data = await cached('tx:feeds:' + cfg.cid + ':' + date, CACHE_TTL, async () => {
       return fetchTencent(UPSTREAM.txFeeds + '?indexID=' + date + '&type=1500&indexKey=' + cfg.cid);
@@ -548,9 +551,18 @@ async function txLeague(lid) {
       rankings = txPlayerRankings(rk || {}, cfg.sport);
     } catch (e) { rankings = {}; }
   }
-  const games = await txGames(lid);
+  /* 日程页扩窗：过去 7 天 + 未来 7 天；首页聚合仍走 txGames 默认窄窗 [0,1,2] */
+  let games = await txGames(lid, [...Array(15).keys()].map(i => i - 7));
+  /* 非赛季兜底：宽窗无赛时，向前抽样最近已完场比赛日（-10/-14/-21/-30），命中即停；完全无数据则留空态 */
+  if (!games.length) {
+    for (const o of [-10, -14, -21, -30]) {
+      games = await txGames(lid, [o]);
+      if (games.length) break;
+    }
+  }
   const schedule = games.map(g => ({
     date: g.dateKey, dateRaw: g.dateRaw || g.dateKey || '', utc8: g.utc8 || '',
+    localTime: g.localTime || '', localTz: g.localTz || '',
     home: g.home.name, homeEn: '', away: g.away.name, awayEn: '', city: g.city || '',
     score: g.status === 'upcoming' ? '—' : `${g.score.home == null ? '—' : g.score.home} : ${g.score.away == null ? '—' : g.score.away}`,
     status: g.status
@@ -687,6 +699,7 @@ function mapWstMatch(a){
   if(!a) return null;
   const at = a.attributes || a;
   const home=at.homePlayer||{}, away=at.awayPlayer||{};
+  const tny=at.tournament||{};
   const iso=wstLondonToBjIso(at.startDateTime);
   const bj=iso?new Date(iso):null;
   const dateRaw=bj?bj.toISOString().slice(0,10):'';
@@ -698,10 +711,11 @@ function mapWstMatch(a){
     id:'snooker-'+a.id, leagueId:'snooker', sport:'billiards', source:'wst',
     status, dateKey:dateRaw, localTime, localTz:'Asia/Shanghai', utc8:iso,
     quarter:'', clock:'', eta:'',
+    tourney: tny.name||'', venueCity: tny.city||'',
     score: status==='upcoming'?{home:null,away:null}:{home:hs,away:as},
     home:{id:String(home.playerID||''), name:wstName(home), abbr:wstAbbr(home), color:'#22D3EE', logo:wstLogo(home)},
     away:{id:String(away.playerID||''), name:wstName(away), abbr:wstAbbr(away), color:'#F472B6', logo:wstLogo(away)},
-    venueCity:'', plays:[], shots:[], roster:[]
+    plays:[], shots:[], roster:[]
   };
 }
 async function wstGames(){
@@ -725,7 +739,7 @@ async function wstLeague(){
   const ranks=(rkRaw&&rkRaw.data)||[];
   const world=ranks.find(r=>/world/i.test(r.attributes&&r.attributes.name))||ranks[0];
   const standings=world?wstStandings(world):[];
-  const schedule=games.map(g=>({date:g.dateKey,dateRaw:g.dateKey,utc8:g.utc8,home:g.home.name,away:g.away.name,city:'',score:g.status==='upcoming'?'—':`${g.score.home} : ${g.score.away}`,status:g.status}));
+  const schedule=games.map(g=>({date:g.dateKey,dateRaw:g.dateKey,utc8:g.utc8,localTime:g.localTime||'',localTz:g.localTz||'',home:g.home.name,away:g.away.name,tourney:g.tourney||'',city:g.venueCity||'',score:g.status==='upcoming'?'—':`${g.score.home} : ${g.score.away}`,status:g.status}));
   return { standings, schedule, rankings:{} };
 }
 
@@ -979,7 +993,8 @@ async function handleEspn(req, res, parsed) {
   if (u.hostname !== ESPN_HOST) return sendJson(res, 403, { error: 'espn host only: ' + u.hostname });
   try {
     const upstream = await fetch(target, {
-      headers: { 'User-Agent': UA, 'Referer': 'https://www.espn.com/', 'Accept': 'application/json, */*' }
+      headers: { 'User-Agent': UA, 'Referer': 'https://www.espn.com/', 'Accept': 'application/json, */*' },
+      signal: AbortSignal.timeout(12000)
     });
     const text = await upstream.text();
     res.writeHead(upstream.status, {

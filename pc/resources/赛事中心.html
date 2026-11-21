@@ -116,6 +116,8 @@ ul{list-style:none}
 .league-label{cursor:pointer}
 .league-label:hover .chip{background:rgba(34,211,238,.28)}
 .league-label .chip{background:rgba(34,211,238,.14);border:1px solid rgba(34,211,238,.3);padding:2px 8px;border-radius:6px}
+.gc-left{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.gc-tourney{font-size:11px;color:var(--text-3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .game-card{
   display:block;width:100%;text-align:left;margin:12px 0;padding:14px;border-radius:var(--radius);
   background:var(--card);border:1px solid var(--line);backdrop-filter:blur(8px);transition:transform .15s ease,border-color .15s ease;
@@ -197,6 +199,12 @@ th{font-size:11px;color:var(--text-3);font-weight:600;background:rgba(255,255,25
 td{border-top:1px solid var(--line)}
 td.team-cell{text-align:left;display:flex;align-items:center;gap:8px}
 td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-size:11px;font-weight:800;flex:0 0 auto}
+/* 赛程对阵行：星标两端固定，中间 vs 居中，队名超长省略 */
+td.sched-match{display:flex;align-items:center;gap:8px;text-align:left}
+.sm-side{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
+.sm-right{justify-content:flex-end;text-align:right}
+.sm-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sm-vs{color:var(--text-3);flex:0 0 auto}
 .rank-1{color:var(--cyan)}
 .row-hover:hover td{background:rgba(255,255,255,.03)}
 
@@ -315,6 +323,17 @@ th.sortable.on{color:var(--cyan)}
 .stand-group>summary{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin:2px 2px 8px;cursor:pointer;list-style:none}
 .stand-group>summary::before{content:'▸';font-size:11px;color:var(--text-3)}
 .stand-group[open]>summary::before{content:'▾'}
+/* 长列表分组标题冻结吸顶（Excel 式）：日程汇总块 / 排名分组 / 球员榜更多 / 我的页分组；详情动作流不吸顶 */
+.lg-block>summary,
+.stand-group>summary,
+.me-section h3.f-toggle{
+  position:sticky; top:0; z-index:6;
+  background:var(--bg-3);
+  border-bottom:1px solid var(--line);
+}
+.lg-block>summary{border-radius:var(--radius) var(--radius) 0 0}
+.stand-group>summary{margin:0;padding:8px 2px}
+.me-section h3.f-toggle{margin:0;padding:10px 0}
 .stat-table td.team-cell{justify-content:center;text-align:center}
 .stat-table td.num{text-align:center}
 .stat-table tr.stat-total td{font-weight:800;border-top:1px solid var(--line);background:rgba(139,124,255,.10)}
@@ -700,7 +719,6 @@ const LEAGUES = {
   frenchopen:  { id:'frenchopen',  sport:'tennis', name:'法网',    region:'法国', country:'法国', tier:'大满贯', project:'大满贯', note:'法国网球公开赛' },
 
   /* ---- 桌球 ---- */
-  blli:{ id:'blli', sport:'billiards', name:'中式八球', region:'中国', country:'中国', tier:'综合', note:'中式台球巡回赛' },
   snooker:{ id:'snooker', sport:'billiards', name:'斯诺克', region:'全球', country:'全球', tier:'顶级', project:'WST 世界巡回赛', note:'世界斯诺克巡回赛（WST）官方赛程与世界排名' },
 
   /* ---- 电竞（EWC 级别六项目为主，其余简讯） ---- */
@@ -755,7 +773,7 @@ function filterGames(list, opts={}){
   const meta = g => LEAGUES[g.leagueId] || {};
   if (opts.sport && opts.sport !== 'all') l = l.filter(g => g.sport === opts.sport);
   if (opts.league && opts.league !== 'all') l = l.filter(g => g.leagueId === opts.league);
-  if (opts.dateKey && opts.dateKey !== 'all') l = l.filter(g => g.dateKey === opts.dateKey);
+  if (opts.dateKey && opts.dateKey !== 'all') l = l.filter(g => bucketKey(g) === opts.dateKey);
   if (opts.sortBy === 'category'){
     l.sort((a,b)=> (leagueOrder(meta(a))-leagueOrder(meta(b))) || a.leagueId.localeCompare(b.leagueId) || (a.utc8||'').localeCompare(b.utc8||''));
   } else if (opts.sortBy === 'status'){
@@ -799,6 +817,23 @@ function _bjDateKey(iso){
 }
 function _bjTime(iso){ const d=_bjDate(iso); return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'); }
 function _bjDateStr(iso){ const d=_bjDate(iso); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+/* 日期桶：按所选显示时区（match 时按比赛地时区）的当天边界归 today/tomorrow/day3；无绝对时刻回退北京时间串桶 */
+function _dayDiffYmd(a,b){ return Math.round((Date.UTC(a.y,a.m-1,a.d)-Date.UTC(b.y,b.m-1,b.d))/86400000); }
+function bucketKey(g){
+  const inst=matchInstant(g);
+  const tz=targetTz(g)||'Asia/Shanghai';
+  if(inst){
+    const pd=_partsTz(inst,tz), pn=_partsTz(new Date(),tz);
+    if(pd&&pn){
+      const diff=_dayDiffYmd({y:Number(pd.year),m:Number(pd.month),d:Number(pd.day)},{y:Number(pn.year),m:Number(pn.month),d:Number(pn.day)});
+      if(diff===0) return 'today';
+      if(diff===1) return 'tomorrow';
+      if(diff===2) return 'day3';
+      return null;
+    }
+  }
+  return _bucketFromBj(g.dateRaw||g.dateKey||'', g.localTime||'');
+}
 /* UTC 日期偏移 offset 天，输出 YYYYMMDD（ESPN scoreboard 按 UTC 日期分桶，dates 参数必须用 UTC 日期） */
 function _utcYmd(offset){ const d=new Date(Date.now()+(offset||0)*86400000); return d.toISOString().slice(0,10).replace(/-/g,''); }
 function _numScore(s){ const n=parseInt(s,10); return isNaN(n)?null:n; }
@@ -838,6 +873,58 @@ function tzTime(iso, tz){
     let v=f.format(new Date(iso)); return v==='24:00'?'00:00':v;
   }catch(e){ return ''; }
 }
+/* ===== 跨时区时间换算（设置 → 目标时区；失败回退比赛当地时区） ===== */
+/* 比赛绝对时间：优先 ISO；否则用北京时间串 utc8(+08:00) 反推 */
+function matchInstant(g){
+  if(!g) return null;
+  if(g.iso){ const d=new Date(g.iso); if(!isNaN(d)) return d; }
+  const bj=String(g.utc8||'').trim();
+  /* 已是 ISO（带 T/Z）直接解析 */
+  if(/[TZ]/.test(bj)){ const d=new Date(bj); if(!isNaN(d)) return d; }
+  /* 北京时间串 YYYY-MM-DD HH:mm[:ss]：提取时分后构造 +08:00，避免带秒再补 :00 产生非法时间 */
+  const m=bj.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if(m){
+    const d=new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:00+08:00`);
+    if(!isNaN(d)) return d;
+  }
+  return null;
+}
+/* 设置项 → 目标 IANA 时区：beijing=北京，match=比赛地，其余存 IANA */
+function targetTz(g){
+  const sel=Store.settings.displayTz||'beijing';
+  if(sel==='beijing') return 'Asia/Shanghai';
+  if(sel==='match') return (g&&g.localTz)||'';
+  return sel||'Asia/Shanghai';
+}
+function _partsTz(d,tz){
+  try{
+    const p=new Intl.DateTimeFormat('zh-CN',{timeZone:tz,year:'numeric',month:'numeric',day:'numeric',weekday:'short'}).formatToParts(d);
+    const o={}; p.forEach(x=>{ if(x.type!=='literal') o[x.type]=x.value; }); return o;
+  }catch(e){ return null; }
+}
+function _timeTz(d,tz){
+  if(!tz) return '';
+  try{
+    const v=new Intl.DateTimeFormat('en-GB',{timeZone:tz,hour:'2-digit',minute:'2-digit',hour12:false}).format(d);
+    return v==='24:00'?'00:00':v;
+  }catch(e){ return ''; }
+}
+/* 主时间结果：{ datePart, time, tz }；换算不出回退比赛当地时区，再无则 null（不显示北京时间） */
+function primaryTime(g){
+  const inst=matchInstant(g); if(!inst) return null;
+  let tz=targetTz(g);
+  let time=_timeTz(inst,tz);
+  if(!time){ tz=(g&&g.localTz)||''; time=tz?_timeTz(inst,tz):''; }
+  if(!time) return null;
+  const cur=Store.settings.uiLang||'zh-CN';
+  let datePart='';
+  const pt=_partsTz(inst,tz);
+  if(pt){
+    if(cur==='zh-CN'||cur==='zh-TW') datePart=`${Number(pt.month)}月${Number(pt.day)}日 ${pt.weekday||''}`.trim();
+    else datePart=`${pt.month}/${pt.day} ${pt.weekday||''}`.trim();
+  }
+  return { datePart, time, tz };
+}
 function _hexColor(c){
   if(!c) return ''; c=String(c).replace('#','').trim();
   return /^[0-9a-fA-F]{6}$/.test(c) ? '#'+c.toLowerCase() : '';
@@ -847,12 +934,22 @@ async function _fetchJson(url){ const r=await fetch(url); if(!r.ok) throw new Er
 /* ESPN API 经本地代理出口，规避浏览器直连 SSL/CORS 受限 */
 async function _espnJson(url){
   const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 4000);
+  const timer = setTimeout(()=>ctrl.abort(), 9000);
   try{
     const r=await fetch(proxyBase()+'/proxy/espn?url='+encodeURIComponent(url), { signal:ctrl.signal });
     if(!r.ok) throw new Error('espn proxy HTTP '+r.status);
     return r.json();
   } finally { clearTimeout(timer); }
+}
+/* 分批并发：避免一次抛出数十个请求把本地代理排队压超时；每批 batchSize 个 allSettled 后再下一批 */
+async function _batchMap(items, batchSize, fn){
+  const out=new Array(items.length);
+  for(let i=0;i<items.length;i+=batchSize){
+    const slice=items.slice(i,i+batchSize);
+    const rs=await Promise.allSettled(slice.map((x,j)=>fn(x,i+j)));
+    rs.forEach((r,j)=>{ out[i+j]=r; });
+  }
+  return out;
 }
 function mapEspnEvent(e, leagueId){
   const comp=(e.competitions&&e.competitions[0])||{};
@@ -873,7 +970,7 @@ function mapEspnEvent(e, leagueId){
   const hT=home.team||{}, aT=away.team||{};
   return {
     id:'espn-'+e.id, leagueId, sport:meta.sport||'basketball', source:'espn',
-    status, dateKey:_bjDateKey(e.date), dateRaw:_bjDateStr(e.date),
+    status, dateKey:_bjDateKey(e.date), dateRaw:_bjDateStr(e.date), iso:e.date,
     localTime: tzTime(e.date, tz), localTz: tz, venueCity, utc8:_bjTime(e.date),
     quarter: status==='live' ? (st.detail||'') : (status==='done'?'完场':''),
     clock:(e.status&&e.status.displayClock)||'', eta:'',
@@ -906,7 +1003,8 @@ function mapStandings(d, sport){
 /* 联赛赛程：scoreboard events → 统一赛程行；status 存状态键供视图本地化 */
 function mapSchedule(events, leagueId){
   return (events||[]).map(e=>mapEspnEvent(e, leagueId)).filter(Boolean).map(g=>({
-    date:g.dateKey, dateRaw:g.dateRaw||'', utc8:g.utc8||'',
+    date:g.dateKey, dateRaw:g.dateRaw||'', utc8:g.utc8||'', iso:g.iso||'',
+    localTime:g.localTime||'', localTz:g.localTz||'',
     home:g.home.name, homeEn:g.home.name,
     away:g.away.name, awayEn:g.away.name,
     city:g.venueCity||'',
@@ -1193,11 +1291,21 @@ const EspnAdapter = {
     if(TENCENT_LEAGUES[id] && !TENCENT_RANK_ONLY[id]) return null;
     const path=ESPN_LEAGUES[id]; if(!path) return null;
     const meta=LEAGUES[id]; if(!meta) return null;
-    const sbUrl='https://site.api.espn.com/apis/site/v2/sports/'+path+'/scoreboard';
+    const sbBase='https://site.api.espn.com/apis/site/v2/sports/'+path+'/scoreboard';
     const stUrl='https://site.api.espn.com/apis/v2/sports/'+path+'/standings';
-    const [sbR, stR]=await Promise.allSettled([_espnJson(sbUrl), _espnJson(stUrl)]);
-    const schedule=sbR.status==='fulfilled' ? mapSchedule(sbR.value.events||[], id) : [];
-    const standings=stR.status==='fulfilled' ? mapStandings(stR.value, meta.sport) : [];
+    /* 日程页扩窗：过去 7 天 + 未来 7 天；ESPN 按 UTC 分桶，逐日补前一 UTC 桶去重合并；分批并发避免本地代理排队 */
+    const dates=[...new Set([...Array(15).keys()].flatMap(i=>{ const o=i-7; return [o-1,o]; }))];
+    const sbs=await _batchMap(dates, 6, u=>_espnJson(sbBase+'?dates='+_utcYmd(u)));
+    const evMap=new Map();
+    sbs.forEach(r=>{ (r.value&&r.value.events||[]).forEach(e=>{ if(e&&!evMap.has(e.id)) evMap.set(e.id,e); }); });
+    /* 非赛季兜底：±7 天无赛时，向前抽样最近已完场比赛日（-10/-14/-21/-30），命中即停 */
+    if(evMap.size===0){
+      const hb=await _batchMap([-10,-14,-21,-30], 4, o=>_espnJson(sbBase+'?dates='+_utcYmd(o)));
+      hb.forEach(r=>{ (r.value&&r.value.events||[]).forEach(e=>{ if(e&&!evMap.has(e.id)) evMap.set(e.id,e); }); });
+    }
+    const schedule=mapSchedule([...evMap.values()], id);
+    const stR=await Promise.allSettled([_espnJson(stUrl)]);
+    const standings=stR[0].status==='fulfilled' ? mapStandings(stR[0].value, meta.sport) : [];
     if(!standings.length && !schedule.length) return null;
     return { meta, detail:{ standings, schedule, rankings:{}, bracket:null } };
   },
@@ -1385,13 +1493,14 @@ const Store = (() => {
   return {
     get follows(){ return read('follows', []); },   set follows(v){ write('follows', v); },
     get history(){ return read('history', []); },   set history(v){ write('history', v); },
-    get settings(){ return Object.assign({ pollInterval:30, cacheTtl:600, cacheMaxGb:1, uiLang:'zh-CN', nameLang:'zh', lite:false, theme:'default', customBg:'#2A1B4A', themeHistory:[], proxyBase:'http://127.0.0.1:8787', sourcePrefs:{} }, read('settings', {})); },
+    get settings(){ return Object.assign({ pollInterval:30, cacheTtl:600, cacheMaxGb:1, uiLang:'zh-CN', nameLang:'zh', lite:false, theme:'default', customBg:'#2A1B4A', themeHistory:[], proxyBase:'http://127.0.0.1:8787', sourcePrefs:{}, displayTz:'beijing' }, read('settings', {})); },
     set settings(v){ write('settings', v); },
     get sources(){ const s = read('sources', null); return Array.isArray(s) && s.length ? s : DEFAULT_SOURCES.slice(); },
     set sources(v){ write('sources', v); },
     get predict(){ return read('predict', {}); },   set predict(v){ write('predict', v); },
     get predictRef(){ return read('predictRef', {}); }, set predictRef(v){ write('predictRef', v); },
     get cache(){ return read('cache', {}); },        set cache(v){ write('cache', v); },
+    get collapse(){ return read('collapse', {}); },  set collapse(v){ write('collapse', v); },
     clearCache(){ write('cache', {}); }
   };
 })();
@@ -1498,7 +1607,7 @@ const CachedProvider = {
     const GKEY='games:all';
     if(!opts.force){
       const hit=cacheGet(GKEY);
-      if(hit){
+      if(hit && hit.length){
         const e=Store.cache[GKEY];
         const age=Date.now()-(e?e.ts:0);
         if(age > Store.settings.cacheTtl*1000*0.5) this._refreshGames().catch(()=>{});
@@ -1567,6 +1676,11 @@ const CachedProvider = {
       try{ g = await SOURCE_ADAPTERS[src].getGame(id); }catch(e){ g = null; }
       if (g) break;
     }
+    /* 适配器还原失败（ESPN 重拉未命中 / 腾讯反查不到）：用聚合缓存里同 id 场次兜底，避免详情页空白 */
+    if(!g){
+      const all = cacheGet('games:all') || [];
+      g = all.find(x=>x.id===id) || null;
+    }
     if (g){
       /* 单场缓存路径同样按北京时间归入今天/明天/后天桶；原始日期串回填 dateRaw */
       if(g.dateRaw==null && g.dateKey) g.dateRaw=g.dateKey;
@@ -1585,6 +1699,12 @@ const SportsProvider = CachedProvider;
  * ===================================================================== */
 
 /* ---------- 全局状态 ---------- */
+/* 折叠/展开状态持久化：按命名分组记忆，重渲染、切页面、刷新后保留；未手动操作不重置 */
+const Coll = {
+  bag(name){ const all=Store.collapse||{}; return all[name]||{}; },
+  get(name, key, def){ const b=this.bag(name); return Object.prototype.hasOwnProperty.call(b,key) ? b[key] : def; },
+  set(name, key, val){ const all=Object.assign({},Store.collapse); all[name]=Object.assign({},all[name],{[key]:val}); Store.collapse=all; }
+};
 const state = {
   sport: 'all',
   league: 'all',           // 次级联赛/项目筛选
@@ -1602,6 +1722,32 @@ const DATE_OPTS = [
   { id:'today',    label:'今天' },
   { id:'tomorrow', label:'明天' },
   { id:'day3',    label:'后天' },
+];
+
+/* 显示时区选项：beijing=北京，match=比赛地，其余为 IANA 时区 */
+const TZ_OPTIONS = [
+  { v:'beijing', label:'北京时间 (UTC+8)' },
+  { v:'match',   label:'比赛当地时区' },
+  { v:'Pacific/Honolulu',     label:'檀香山 (UTC-10)' },
+  { v:'America/Los_Angeles',  label:'洛杉矶 (UTC-8)' },
+  { v:'America/Denver',       label:'丹佛 (UTC-7)' },
+  { v:'America/Mexico_City',  label:'墨西哥城 (UTC-6)' },
+  { v:'America/New_York',     label:'纽约 (UTC-5)' },
+  { v:'America/Sao_Paulo',    label:'圣保罗 (UTC-3)' },
+  { v:'Europe/London',        label:'伦敦 (UTC±0)' },
+  { v:'Europe/Paris',         label:'巴黎 (UTC+1)' },
+  { v:'Europe/Berlin',        label:'柏林 (UTC+1)' },
+  { v:'Europe/Madrid',        label:'马德里 (UTC+1)' },
+  { v:'Europe/Rome',          label:'罗马 (UTC+1)' },
+  { v:'Africa/Cairo',         label:'开罗 (UTC+2)' },
+  { v:'Europe/Moscow',        label:'莫斯科 (UTC+3)' },
+  { v:'Asia/Dubai',           label:'迪拜 (UTC+4)' },
+  { v:'Asia/Kolkata',         label:'孟买 (UTC+5:30)' },
+  { v:'Asia/Bangkok',         label:'曼谷 (UTC+7)' },
+  { v:'Asia/Tokyo',           label:'东京 (UTC+9)' },
+  { v:'Asia/Seoul',           label:'首尔 (UTC+9)' },
+  { v:'Australia/Sydney',     label:'悉尼 (UTC+10)' },
+  { v:'Pacific/Auckland',     label:'奥克兰 (UTC+12)' }
 ];
 
 /* 广告位配置：link 为空时占位；后续填入落地页链接 / 素材图即可挂载广告 */
@@ -1663,7 +1809,7 @@ const I18N = {
  'league.back':'← 返回赛事列表','league.noData':'联赛数据待接入',
  'detail.flow':'回合动作流','detail.form':'球队近况与战绩','detail.stats':'实时技术统计','detail.tennisRank':'选手排名与积分',
  'detail.predict':'赛事预测','predict.chance':'胜率参考','predict.homeWin':'主队胜','predict.awayWin':'客队胜','predict.run':'预测','predict.reset':'重置预测','predict.manual':'已手动调整','predict.base':'基于战绩、排名、近况与主场推演，仅供参考',
- 'detail.info':'赛事信息','detail.status':'状态','detail.date':'日期','detail.localTime':'当地时间','detail.beijing':'北京时间(+8)','detail.result':'结果',
+ 'detail.info':'赛事信息','detail.status':'状态','detail.tourney':'赛事','detail.date':'日期','detail.localTime':'当地时间','detail.beijing':'北京时间(+8)','detail.displayTime':'显示时间','detail.result':'结果',
  'detail.rosterNote':'名单由数据源提供，未开赛或无数据时为空',
  'roster.starters':'首发（{n}）','roster.subs':'替补（{n}）','roster.coach':'教练组','roster.headCoach':'主教练','roster.assistantCoach':'助理教练',
  'team.record':'赛季战绩','team.rank':'排名 / 积分','team.last5':'近5场','team.home':'主队','team.away':'客队',
@@ -1676,14 +1822,14 @@ const I18N = {
  'me.follows':'我的关注（{n}）','me.history':'浏览历史（{n}）','me.clear':'清空',
  'me.pref':'偏好与数据','me.settings':'设置与数据源','me.settingsSub':'刷新间隔 · 缓存 · 采集网站',
  'me.cache':'本地缓存','me.cacheSub':'已用 {size} · 每 30 分钟自动清理过期项','me.cacheClear':'清理',
- 'me.about':'关于','me.aboutSub':'版本 0.2.0 · 赛事数据来自公开数据源，暂未接入的项目显示为空态',
+ 'me.about':'关于','me.aboutSub':'版本 0.2.1 · 赛事数据来自公开数据源，暂未接入的项目显示为空态',
  'me.view':'查看','me.unfollow':'取关','me.open':'打开',
  'me.fLeague':'联赛','me.fTeam':'球队','me.fPlayer':'选手','me.hGame':'比赛','me.hLeague':'联赛',
  'me.fTeams':'关注球队/选手（{n}）','me.fGames':'关注赛程（{n}）',
  'me.emptyFollowTeams':'还没有关注球队或选手，去比赛详情页点星标关注','me.emptyFollowGames':'关注球队后，其未开赛场次会自动出现在这里',
  'me.emptyFollow':'还没有关注内容，去联赛页点星标关注','me.emptyHistory':'暂无浏览历史',
  'settings.title':'设置','settings.general':'通用','settings.tabGeneral':'通用设置','settings.tabSources':'数据源网站','settings.uiLang':'界面语言','settings.nameLang':'球队 / 球员名称',
- 'settings.nameLangHint':'仅切换名字，不改动界面文案','settings.lite':'省流量模式','settings.liteHint':'关闭非必要图片与动效（手机端优先）',
+ 'settings.nameLangHint':'仅切换名字，不改动界面文案','settings.displayTz':'显示时区','settings.displayTzHint':'亮色时间按所选时区显示，暗色行为比赛当地时间；换算不出时回退比赛当地时区','settings.lite':'省流量模式','settings.liteHint':'关闭非必要图片与动效（手机端优先）',
  'settings.poll':'刷新间隔','settings.pollHint':'仅打开的比赛详情页轮询','settings.cache':'本地缓存','settings.cacheMax':'缓存大小上限',
  'settings.cacheMeta':'已用 {used} / 上限 {max}；超上限按时间从旧到新覆盖；每 30 分钟清理过期项。',
  'settings.cacheClear':'立即清理缓存','settings.sources':'数据源网站（本机采集配置）',
@@ -1764,6 +1910,7 @@ const I18N = {
  'detail.date':'日期',
  'detail.localTime':'當地時間',
  'detail.beijing':'北京時間(+8)',
+ 'detail.displayTime':'顯示時間',
  'detail.result':'結果',
  'detail.rosterNote':'名單由數據源提供，未開賽或無數據時為空',
  'roster.starters':'首發（{n}）',
@@ -1805,7 +1952,7 @@ const I18N = {
  'me.cacheSub':'已用 {size} · 每 30 分鐘自動清理過期項',
  'me.cacheClear':'清理',
  'me.about':'關於',
- 'me.aboutSub':'版本 0.2.0 · 賽事數據來自公開數據源，暫未接入的項目顯示為空態',
+ 'me.aboutSub':'版本 0.2.1 · 賽事數據來自公開數據源，暫未接入的項目顯示為空態',
  'me.view':'查看',
  'me.unfollow':'取關',
  'me.open':'打開',
@@ -1822,6 +1969,7 @@ const I18N = {
  'settings.uiLang':'界面語言',
  'settings.nameLang':'球隊 / 球員名稱',
  'settings.nameLangHint':'僅切換名字，不改動界面文案',
+ 'settings.displayTz':'顯示時區','settings.displayTzHint':'亮色時間按所選時區顯示，暗色行為比賽當地時間；換算不出時回退比賽當地時區',
  'settings.lite':'省流量模式',
  'settings.liteHint':'關閉非必要圖片與動效（手機端優先）',
  'settings.poll':'刷新間隔',
@@ -1922,7 +2070,7 @@ const I18N = {
  'league.back':'← Back to events','league.noData':'League data pending',
  'detail.flow':'Play-by-play','detail.form':'Recent form','detail.stats':'Live Stats','detail.tennisRank':'Rank & Points',
  'detail.predict':'Match Prediction','predict.chance':'Win probability','predict.homeWin':'Home','predict.awayWin':'Away','predict.run':'Predict','predict.reset':'Reset','predict.manual':'Manually adjusted','predict.base':'Estimated from record, rank, recent form & home advantage, for reference only',
- 'detail.info':'Match Info','detail.status':'Status','detail.date':'Date','detail.localTime':'Local time','detail.beijing':'Beijing (+8)','detail.result':'Result',
+ 'detail.info':'Match Info','detail.status':'Status','detail.tourney':'Event','detail.date':'Date','detail.localTime':'Local time','detail.beijing':'Beijing (+8)','detail.displayTime':'Display time','detail.result':'Result',
  'detail.rosterNote':'Roster comes from the data source; empty before kickoff or when unavailable',
  'roster.starters':'Starters ({n})','roster.subs':'Subs ({n})','roster.coach':'Coaching staff','roster.headCoach':'Head coach','roster.assistantCoach':'Assistant coach',
  'team.record':'Season record','team.rank':'Rank / Pts','team.last5':'Last 5','team.home':'Home','team.away':'Away',
@@ -1935,14 +2083,14 @@ const I18N = {
  'me.follows':'Following ({n})','me.history':'History ({n})','me.clear':'Clear',
  'me.pref':'Preferences & Data','me.settings':'Settings & Sources','me.settingsSub':'Refresh interval · Cache · Sources',
  'me.cache':'Local cache','me.cacheSub':'Used {size} · expired items cleared every 30 min','me.cacheClear':'Clear',
- 'me.about':'About','me.aboutSub':'Version 0.2.0 · match data comes from public sources; uncovered events show an empty state',
+ 'me.about':'About','me.aboutSub':'Version 0.2.1 · match data comes from public sources; uncovered events show an empty state',
  'me.view':'View','me.unfollow':'Unfollow','me.open':'Open',
  'me.fLeague':'League','me.fTeam':'Team','me.fPlayer':'Player','me.hGame':'Match','me.hLeague':'League',
  'me.fTeams':'Teams / Players ({n})','me.fGames':'Followed Fixtures ({n})',
  'me.emptyFollowTeams':'No team or player followed yet; star one on the match detail page','me.emptyFollowGames':'Upcoming fixtures of followed teams appear here automatically',
  'me.emptyFollow':'No follows yet; star a league to follow','me.emptyHistory':'No browsing history',
  'settings.title':'Settings','settings.general':'General','settings.tabGeneral':'General','settings.tabSources':'Data sources','settings.uiLang':'Interface language','settings.nameLang':'Team / player names',
- 'settings.nameLangHint':'Switches names only, not interface text','settings.lite':'Data saver','settings.liteHint':'Disable non-essential images & animations (mobile-first)',
+ 'settings.nameLangHint':'Switches names only, not interface text','settings.displayTz':'Display timezone','settings.displayTzHint':'Bright times use the selected timezone; dim line shows venue local time. Falls back to venue local time if conversion fails','settings.lite':'Data saver','settings.liteHint':'Disable non-essential images & animations (mobile-first)',
  'settings.poll':'Refresh interval','settings.pollHint':'Polls only the open match detail page','settings.cache':'Local cache','settings.cacheMax':'Cache size limit',
  'settings.cacheMeta':'Used {used} / limit {max}; overflow evicted oldest first; expired items cleared every 30 min.',
  'settings.cacheClear':'Clear cache now','settings.sources':'Data sources (local config)',
@@ -1992,11 +2140,19 @@ const NAME_EN = {
   '俄克拉荷马城雷霆':'Oklahoma City Thunder', '洛杉矶快船':'LA Clippers',
   '丹佛掘金':'Denver Nuggets', '波特兰开拓者':'Portland Trail Blazers',
   '北京首钢':'Beijing Ducks', '广东华南虎':'Guangdong Southern Tigers',
-  '洛杉矶湖人':'LA Lakers', '明尼苏达森林狼':'Minnesota Timberwolves',
+  '洛杉矶湖人':'Los Angeles Lakers', '明尼苏达森林狼':'Minnesota Timberwolves',
   '辽宁本钢':'Liaoning Flying Leopards', '四川金强':'Sichuan Blue Whales',
   '底特律活塞':'Detroit Pistons', '密尔沃基雄鹿':'Milwaukee Bucks',
   '新疆伊力特':'Xinjiang Flying Tigers', '江苏肯帝亚':'Jiangsu Dragons',
   '波士顿凯尔特人':'Boston Celtics', '迈阿密热火':'Miami Heat',
+  /* NBA 其余球队（对齐 NBA.com 官方英文名） */
+  '布鲁克林篮网':'Brooklyn Nets', '纽约尼克斯':'New York Knicks', '费城76人':'Philadelphia 76ers',
+  '多伦多猛龙':'Toronto Raptors', '芝加哥公牛':'Chicago Bulls', '克利夫兰骑士':'Cleveland Cavaliers',
+  '印第安纳步行者':'Indiana Pacers', '亚特兰大老鹰':'Atlanta Hawks', '夏洛特黄蜂':'Charlotte Hornets',
+  '奥兰多魔术':'Orlando Magic', '华盛顿奇才':'Washington Wizards', '金州勇士':'Golden State Warriors',
+  '菲尼克斯太阳':'Phoenix Suns', '萨克拉门托国王':'Sacramento Kings', '达拉斯独行侠':'Dallas Mavericks',
+  '休斯顿火箭':'Houston Rockets', '孟菲斯灰熊':'Memphis Grizzlies', '新奥尔良鹈鹕':'New Orleans Pelicans',
+  '圣安东尼奥马刺':'San Antonio Spurs',
   '曼城':'Manchester City', '阿森纳':'Arsenal', '利物浦':'Liverpool', '切尔西':'Chelsea',
   '皇家马德里':'Real Madrid', '巴塞罗那':'FC Barcelona',
   '上海海港':'Shanghai Port', '成都蓉城':'Chengdu Rongcheng',
@@ -2026,7 +2182,13 @@ const NAME_ZH = {
   'Indiana Pacers':'印第安纳步行者', 'Los Angeles Lakers':'洛杉矶湖人', 'New Orleans Pelicans':'新奥尔良鹈鹕',
   'Oklahoma City Thunder':'俄克拉荷马城雷霆', 'Orlando Magic':'奥兰多魔术', 'Phoenix Suns':'菲尼克斯太阳',
   'Sacramento Kings':'萨克拉门托国王', 'Toronto Raptors':'多伦多猛龙', 'Utah Jazz':'犹他爵士',
-  'Washington Wizards':'华盛顿奇才', 'Atlanta Dream':'亚特兰大梦想', 'Golden State Valkyries':'金州女武神',
+  'Washington Wizards':'华盛顿奇才',
+  /* NBA 其余球队（对齐 NBA 中文官网译名） */
+  'Boston Celtics':'波士顿凯尔特人', 'New York Knicks':'纽约尼克斯', 'Philadelphia 76ers':'费城76人',
+  'Milwaukee Bucks':'密尔沃基雄鹿', 'Miami Heat':'迈阿密热火', 'Minnesota Timberwolves':'明尼苏达森林狼',
+  'Portland Trail Blazers':'波特兰开拓者', 'LA Clippers':'洛杉矶快船', 'Los Angeles Clippers':'洛杉矶快船',
+  'Dallas Mavericks':'达拉斯独行侠', 'Memphis Grizzlies':'孟菲斯灰熊', 'San Antonio Spurs':'圣安东尼奥马刺',
+  'Atlanta Dream':'亚特兰大梦想', 'Golden State Valkyries':'金州女武神',
   'Phoenix Mercury':'菲尼克斯水星', 'Seattle Storm':'西雅图风暴',
   /* NBA 球员（ESPN displayName → 中文；未收录新秀/生僻名回退英文） */
   'Aaron Nesmith':'阿隆·内史密斯', 'Aaron Wiggins':'阿隆·威金斯', 'Al Horford':'艾尔·霍福德',
@@ -2060,7 +2222,54 @@ const NAME_ZH = {
   'Laeticia Amihere':'莱蒂西亚·阿米赫雷', 'Kaila Charles':'凯拉·查尔斯', 'Isobel Borlase':'伊泽贝尔·博莱斯',
   'Te-Hina Paopao':'特希娜·帕奥帕奥', 'Ashten Prechtel':'阿什滕·普雷克特尔', 'Aminata Gueye':'阿米娜塔·盖耶',
   'Matilde Villa':'玛蒂尔德·维拉', 'Indya Nivar':'英迪亚·尼瓦尔', 'Juste Jocyte':'朱斯特·约西特',
-  'Madina Okot':'马迪娜·奥科特', 'Miela Sowah':'米埃拉·索瓦'
+  'Madina Okot':'马迪娜·奥科特', 'Miela Sowah':'米埃拉·索瓦',
+  /* ---- 斯诺克：中国 / 香港选手（还原官方中文名） ---- */
+  'Bai Yulu':'白雨露', 'Chang Bingyu':'常冰玉', 'Deng Haohui':'邓壕辉', 'Ding Junhui':'丁俊晖',
+  'Fan Zhengyi':'范争一', 'Gao Yang':'高阳', 'Gong Chenzhi':'巩晨智', 'He Guoqiang':'贺国强',
+  'Huang Jiahao':'黄佳浩', 'Jiang Jun':'江俊', 'Lan Yuhao':'蓝裕豪', 'Lei Peifan':'雷佩凡',
+  'Liu Hongyu':'刘宏宇', 'Liu Wenwei':'刘文炜', 'Liu Yang':'刘杨', 'Long Zehuang':'龙泽煌',
+  'Luo Zetao':'罗泽涛', 'Lyu Haotian':'吕昊天', 'Pang Junxu':'庞俊旭', 'Si Jiahui':'斯佳辉',
+  'Wang Xinbo':'王信伯', 'Wu Yize':'吴宜泽', 'Xiao Guodong':'肖国栋', 'Xu Si':'徐思',
+  'Xu Yichen':'许医尘', 'Yao Pengcheng':'姚朋成', 'Yuan Sijun':'袁思俊', 'Zhang Anda':'张安达',
+  'Zhao Hanyang':'赵翰洋', 'Zhao Xintong':'赵心童', 'Zhou Yuelong':'周跃龙',
+  'Cheung Ka Wai':'张家玮', 'Marco Fu':'傅家俊', 'Onyee Ng':'吴安仪', 'Shaun Liu':'廖予生',
+  /* ---- 斯诺克：海外选手（通用音译 / 媒体通用译名） ---- */
+  'Aaron Hill':'亚伦·希尔', 'Alexander Ursenbacher':'亚历山大·乌森巴赫', 'Alfie Burden':'阿尔菲·伯登',
+  'Ali Carter':'阿里·卡特', 'Allan Taylor':'艾伦·泰勒', 'Andrew Higginson':'安德鲁·希金森',
+  'Anthony McGill':'安东尼·麦克吉尔', 'Anton Kazakov':'安东·卡扎科夫', 'Antoni Kowalski':'安东尼·科瓦尔斯基',
+  'Artemijs Zizins':'阿特米斯·齐津斯', 'Ashley Carty':'阿什利·卡蒂', 'Ashley Hugill':'阿什利·休吉尔',
+  'Barry Hawkins':'巴里·霍金斯', 'Ben Mertens':'本·梅尔滕斯', 'Ben Woollaston':'本·沃拉斯顿',
+  'Chatchapong Nasa':'查查蓬·纳萨', 'Chris Wakelin':'克里斯·沃克林', 'Connor Benzey':'康纳·本齐',
+  'Craig Steadman':'克雷格·斯特德曼', 'Daniel Wells':'丹尼尔·威尔斯', 'Daniel Womersley':'丹尼尔·沃默斯利',
+  'Darragh Gallagher':'达拉·加拉赫', 'David Gilbert':'大卫·吉尔伯特', 'David Grace':'大卫·格雷斯',
+  'David Lilley':'大卫·利利', 'Dean Young':'迪恩·扬', 'Dermot Kelly':'德莫特·凯利',
+  'Duane Jones':'杜安·琼斯', 'Dylan Emery':'迪伦·埃默里', 'Edward Jones':'爱德华·琼斯',
+  'Elliot Slessor':'埃利奥特·斯莱瑟', 'Fergal Quinn':'弗加尔·奎因', 'Florian Nuessle':'弗洛里安·纽斯勒',
+  'Gary Wilson':'加里·威尔逊', 'Hammad Miah':'哈马德·米雅', 'Hossein Vafaei':'侯赛因·瓦菲',
+  'Ian Burns':'伊恩·伯恩斯', 'Ishpreet Singh Chadha':'伊什普利特·辛格·查达', 'Iulian Boiko':'尤里安·博伊科',
+  'Jack Bradford':'杰克·布拉德福德', 'Jack Lisowski':'杰克·利索夫斯基', 'Jackson Page':'杰克逊·佩奇',
+  'Jak Jones':'杰克·琼斯', 'Jamie Clarke':'杰米·克拉克', 'Jamie Jones':'杰米·琼斯',
+  'Jimmy Robertson':'吉米·罗伯逊', 'Jimmy White':'吉米·怀特', 'Joe O\'Connor':'乔·奥康纳',
+  'John Higgins':'约翰·希金斯', 'Jordan Brown':'乔丹·布朗', 'Joshua Thomond':'约书亚·托蒙德',
+  'Judd Trump':'贾德·特鲁姆普', 'Julien Leclercq':'朱利安·勒克莱尔', 'Kaylan Patel':'凯兰·帕特尔',
+  'Kyren Wilson':'凯伦·威尔逊', 'Leone Crowley':'利昂·克劳利', 'Liam Davies':'利亚姆·戴维斯',
+  'Liam Graham':'利亚姆·格雷厄姆', 'Liam Highfield':'利亚姆·海菲尔德', 'Liam Pullen':'利亚姆·普伦',
+  'Louis Heathcote':'路易斯·希思科特', 'Luca Brecel':'卢卡·布雷切尔', 'Mahmoud El Hareedy':'马哈茂德·哈雷迪',
+  'Mark Allen':'马克·艾伦', 'Mark Joyce':'马克·乔伊斯', 'Mark Selby':'马克·塞尔比',
+  'Mark Williams':'马克·威廉姆斯', "Martin O'Donnell":'马丁·奥唐奈', 'Mateusz Baranowski':'马特乌什·巴拉诺夫斯基',
+  'Matthew Selt':'马修·塞尔特', 'Matthew Stevens':'马修·史蒂文斯', 'Michael Holt':'迈克尔·霍尔特',
+  'Michael Larkov':'迈克尔·拉尔科夫', 'Michal Szubarczyk':'米哈尔·苏巴奇克', 'Mina Awad':'米娜·阿瓦德',
+  'Mitchell Mann':'米切尔·曼恩', 'Neil Robertson':'尼尔·罗伯逊', 'Noppon Saengkham':'诺庞·桑坎姆',
+  'Oliver Brown':'奥利弗·布朗', 'Oliver Lines':'奥利弗·莱恩斯', 'Oliver Sykes':'奥利弗·赛克斯',
+  'Patrick Whelan':'帕特里克·惠兰', 'Paul Norris':'保罗·诺里斯', "Phil O'Kane":'菲尔·奥凯恩',
+  'Reanne Evans':'瑞安·埃文斯', 'Ricky Walden':'里奇·沃顿', 'Riley Powell':'莱利·鲍威尔',
+  'Robbie Williams':'罗比·威廉姆斯', 'Robert Milkins':'罗伯特·米尔金斯', "Ronnie O'Sullivan":'罗尼·奥沙利文',
+  'Ross Muir':'罗斯·缪尔', 'Ryan Day':'瑞恩·戴', 'Sahil Nayyar':'萨希尔·纳亚尔',
+  'Sam Craigie':'山姆·克雷吉', 'Scott Donaldson':'斯科特·唐纳森', "Sean O'Sullivan":'肖恩·奥沙利文',
+  'Shaun Murphy':'肖恩·墨菲', 'Stan Moody':'斯坦·穆迪', 'Stephen Maguire':'斯蒂芬·马奎尔',
+  'Steven Hallworth':'史蒂文·霍尔沃思', 'Steven Wardropper':'史蒂文·沃德罗珀', 'Stuart Bingham':'斯图尔特·宾汉姆',
+  'Stuart Carrington':'斯图尔特·卡灵顿', 'Thanawat Tirapongpaiboon':'塔纳瓦特·提拉蓬派邦',
+  'Thepchaiya Un-Nooh':'塔猜亚·乌努', 'Tom Ford':'汤姆·福德', 'Vladislav Gradinari':'弗拉迪斯拉夫·格拉迪纳里'
 };
 /* 仅切换球队 / 球员 / 教练名字；界面文案、动作描述不经过此函数 */
 function tn(name){
@@ -2068,15 +2277,44 @@ function tn(name){
   if (Store.settings.nameLang === 'en') return NAME_EN[name] || name;
   return NAME_ZH[name] || name;
 }
+/* 斯诺克赛事名：WST 英文原名（含赞助商前缀 / 年份）→ 中文通用名；关键词包含匹配，未命中回退英文原名 */
+const TOURNEY_ZH = [
+  [/shoot\s*out/i, '单局限时赛'],
+  [/scottish\s*open/i, '苏格兰公开赛'],
+  [/uk\s*championship/i, '英国锦标赛']
+];
+function tourneyName(name){
+  if (!name) return '';
+  if (Store.settings.nameLang === 'en') return name;
+  for (const [re, zh] of TOURNEY_ZH){ if (re.test(name)) return zh; }
+  return name;
+}
 /* 中国本土联赛：球员 / 队名仅用中文，不附英文括号 */
 const CHINA_LEAGUES = { cba:1, wcba:1, csl:1 };
 function isChinaLeague(lid){ return !!(CHINA_LEAGUES[lid] || (LEAGUES[lid] && LEAGUES[lid].country==='中国')); }
 /* 非中国赛事：中文全名为主，英文名小字括号淡化；中国赛事或无英文名时仅中文 */
 function bilingualNameHtml(name, en, lid){
-  const zh = esc(name||'—');
-  const same = String(en||'').trim().toLowerCase() === String(name||'').trim().toLowerCase();
-  if (en && !isChinaLeague(lid) && !same) return `${zh} <span class="p-en">(${esc(en)})</span>`;
-  return zh;
+  /* 跟随全局名称开关单语显示，窄行不再中英并列折行；英文模式优先用上游英文名，中文模式走中英对照映射 */
+  if (Store.settings.nameLang === 'en') return esc(en || tn(name) || '—');
+  return esc(tn(name) || name || en || '—');
+}
+/* 表格/列表内关注星标：队 / 选手通用；点击切换关注后由 repaint 回调重绘激活态 */
+function teamStarHtml(name){
+  const id=teamFollowId(name);
+  return `<button class="star-btn sm ${isFollowing('team',id)?'active':''}" data-follow-type="team" data-follow-id="${esc(id)}" data-follow-name="${esc(name||'')}" title="关注球队" type="button">★</button>`;
+}
+function playerStarHtml(team, name){
+  const id=playerFollowId(team,name);
+  return `<button class="star-btn sm ${isFollowing('player',id)?'active':''}" data-follow-type="player" data-follow-id="${esc(id)}" data-follow-name="${esc(name||'')}" data-follow-sub="${esc(team||'')}" title="关注选手" type="button">★</button>`;
+}
+function bindFollowStars(host, repaint){
+  host.querySelectorAll('[data-follow-type]').forEach(b=>{
+    b.addEventListener('click',(ev)=>{
+      ev.stopPropagation();
+      toggleFollow(b.dataset.followType, b.dataset.followId, b.dataset.followName, b.dataset.followSub);
+      if (typeof repaint==='function') repaint();
+    });
+  });
 }
 /* 中文队名地名前缀（匹配时按长度降序，避免“广东/广州”等歧义）；拆出地名后上行省/市、下行队名剩余 */
 const CITY_PREFIX = ['长白山','上海','北京','广州','深圳','大连','成都','武汉','青岛','天津','重庆','浙江','山东','云南','辽宁','江苏','南京','宁波','福建','山西','四川','新疆','吉林','陕西','河南','湖北','湖南','安徽','广西','贵州','黑龙江','厦门','佛山','东莞','苏州','惠州','杭州','梅州','沧州','南通'];
@@ -2125,10 +2363,19 @@ function locCity(g){
   return splitTeamName((g.home&&g.home.name)||'').city || '';
 }
 /* 当地时间行：优先「城市 时间」同行；无城市回退「当地时间 时间」；无时间整项隐藏 */
+/* 城市+当地时间（不含标签），供外层已有标签的场景复用 */
+function locCityTime(g){
+  if(!g || !g.localTime) return '';
+  const isBj = g.localTz==='Asia/Shanghai';
+  const city = isBj ? '' : locCity(g);
+  return city ? `${esc(city)} <span class="num">${esc(g.localTime)}</span>` : `<span class="num">${esc(g.localTime)}</span>`;
+}
 function locTimeHtml(g){
   if(!g || !g.localTime) return '';
-  const city = locCity(g);
-  return city ? `${esc(city)} <span class="num">${esc(g.localTime)}</span>` : `${t('detail.localTime')} <span class="num">${esc(g.localTime)}</span>`;
+  const isBj = g.localTz==='Asia/Shanghai';
+  const city = isBj ? '' : locCity(g);
+  const label = isBj ? t('detail.beijing') : t('detail.localTime');
+  return city ? `${esc(city)} <span class="num">${esc(g.localTime)}</span>` : `${label} <span class="num">${esc(g.localTime)}</span>`;
 }
 /* 卡片队名：中文界面且能拆出地名时折两行，否则单行 */
 function teamNameHtml(name){
@@ -2150,6 +2397,13 @@ function localizeSide(side){
 }
 function localizeGame(g){
   if(!g) return g;
+  /* 状态兜底：上游误标完场/进行中但开赛时间仍在未来（容错 5 分钟）→ 回退未开赛并清比分 */
+  if(g.status && g.status!=='upcoming'){
+    const inst=matchInstant(g);
+    if(inst && inst.getTime() > Date.now()+5*60000){
+      g.status='upcoming'; g.score={home:null,away:null}; g.clock=''; g.quarter='';
+    }
+  }
   const out = Object.assign({}, g, { home: localizeSide(g.home), away: localizeSide(g.away) });
   if(g.possessionPlayer) out.possessionPlayer = localizePlayer(g.possessionPlayer);
   out.plays = (g.plays||[]).map(pl=>{
@@ -2350,7 +2604,8 @@ function badgeMeta(g){
     return { cls:'status-live', text: clock || t('status.live') };
   }
   if (g.status==='done') return { cls:'status-done', text:t('status.done') };
-  const tm = g.localTime || _bjTime(g.utc8||'');
+  const pt = primaryTime(g);
+  const tm = (pt && pt.time) || g.localTime || _bjTime(g.utc8||'');
   return { cls:'status-upcoming', text: tm || t('status.upcoming') };
 }
 function gameCardHtml(g){
@@ -2360,10 +2615,16 @@ function gameCardHtml(g){
   const score = (g.status==='upcoming' || noScore)
     ? `<span class="vs">VS</span>`
     : `<span class="num">${g.score.home} : ${g.score.away}</span>`;
+  const pt = primaryTime(g);
+  const showLocal = !!(g.localTime && pt && pt.tz !== (g.localTz||''));
+  const mainText = pt ? [pt.datePart, pt.time].filter(Boolean).join(' ') : '';
   return `
   <div class="game-card" data-game="${g.id}" role="button" tabindex="0">
     <div class="gc-top">
-      <span class="league-label" data-league="${g.leagueId}" role="link" tabindex="0"><span class="chip">${esc(lg.name)}</span></span>
+      <span class="gc-left">
+        <span class="league-label" data-league="${g.leagueId}" role="link" tabindex="0"><span class="chip">${esc(lg.name)}</span></span>
+        ${g.tourney?`<span class="gc-tourney">${esc(tourneyName(g.tourney))}</span>`:''}
+      </span>
       <span class="gc-status ${st.cls}">${st.text}</span>
     </div>
     <div class="gc-teams">
@@ -2383,7 +2644,8 @@ function gameCardHtml(g){
     </div>
     <div class="gc-bottom">
       <div class="gc-time">
-        <span class="gc-date num">${esc(schedBjText(g))}</span>
+        ${mainText?`<span class="gc-date num">${esc(mainText)}</span>`:''}
+        ${showLocal?`<span class="local">${locTimeHtml(g)}</span>`:''}
       </div>
     </div>
   </div>`;
@@ -2487,7 +2749,7 @@ function standingsTable(d, sport){
     return `<th class="sortable${active?' on':''}"${align} data-stand="${c.k}">${c.label}${arrow?` <span class="num">${arrow}</span>`:''}</th>`;
   }).join('');
   const cell=(r,c)=>{
-    if(c.k==='name') return `<td class="team-cell">${badgeHtml(r.abbr,r.color)}<span>${esc(r.name)}</span></td>`;
+    if(c.k==='name') return `<td class="team-cell">${teamStarHtml(r.name)}${badgeHtml(r.abbr,r.color)}<span>${esc(r.name)}</span></td>`;
     if(c.k==='rank') return `<td class="num rank-${r.rank}">${r.rank}</td>`;
     if(c.k==='streak') return `<td>${esc(r.streak||'—')}</td>`;
     const v=r[c.k]; return `<td class="num">${v==null||v===''?'—':esc(v)}</td>`;
@@ -2498,8 +2760,14 @@ function standingsTable(d, sport){
     const table=`<div class="table-wrap"><table>
       <thead><tr>${standHead()}</tr></thead><tbody>${body}</tbody></table></div>`;
     if(groupsArr.length===1) return table;
-    return `<details class="stand-group" open><summary><span>${esc(groupLabel(g))}</span><span class="num" style="color:var(--text-3)">${gRows.length} 队</span></summary>${table}</details>`;
+    const gkey=(sport||'basketball')+':'+(g||'');
+    return `<details class="stand-group" ${Coll.get('sg',gkey,true)?'open':''} data-fold="sg" data-key="${esc(gkey)}"><summary><span>${esc(groupLabel(g))}</span><span class="num" style="color:var(--text-3)">${gRows.length} 队</span></summary>${table}</details>`;
   }).join('');
+}
+function schedRowText(s){
+  const pt=primaryTime(s);
+  if(pt) return [pt.datePart,pt.time].filter(Boolean).join(' ');
+  return schedBjText(s);
 }
 function scheduleTable(d, lid){
   const stLabel = { live:t('status.live'), done:t('status.done'), upcoming:t('status.upcoming') };
@@ -2509,9 +2777,13 @@ function scheduleTable(d, lid){
     <thead><tr><th>${t('table.date')}</th><th>${t('table.match')}</th><th>${t('table.score')}</th><th>${t('table.venue')||'比赛地'}</th><th>${t('table.status')}</th></tr></thead>
     <tbody>${(d.schedule||[]).map(s=>`
       <tr class="row-hover">
-        <td class="num">${esc(schedBjText(s))}</td>
-        <td>${bilingualNameHtml(s.home, s.homeEn, lid)} <span style="color:var(--text-3)">vs</span> ${bilingualNameHtml(s.away, s.awayEn, lid)}</td>
-        <td class="num">${esc(s.score)}</td><td>${cityName(s.city)}</td><td>${esc(stLabel[s.status]||s.status||'—')}</td>
+        <td class="num">${esc(schedRowText(s))}</td>
+        <td class="sched-match">
+          <span class="sm-side">${teamStarHtml(s.home)}<span class="sm-name">${bilingualNameHtml(s.home, s.homeEn, lid)}</span></span>
+          <span class="sm-vs">vs</span>
+          <span class="sm-side sm-right"><span class="sm-name">${bilingualNameHtml(s.away, s.awayEn, lid)}</span>${teamStarHtml(s.away)}</span>
+        </td>
+        <td class="num">${esc(s.score)}</td><td>${s.tourney?esc(tourneyName(s.tourney)):cityName(s.city)}</td><td>${esc(stLabel[s.status]||s.status||'—')}</td>
       </tr>`).join('')}
     </tbody></table></div>`;
 }
@@ -2553,14 +2825,14 @@ function rankingsList(d, sport, lid){
       </tr></thead>
       <tbody>${sorted.map((r,i)=>`
         <tr class="row-hover">
-          <td class="team-cell"><span class="p-num">${i+1}</span> <span>${bilingualNameHtml(r.name,r.en,lid)}</span></td>
+          <td class="team-cell">${playerStarHtml(r.team,r.name)}<span class="p-num">${i+1}</span> <span>${bilingualNameHtml(r.name,r.en,lid)}</span></td>
           <td>${esc(r.team)}</td>
           <td class="num">${r.val}</td>
         </tr>`).join('')}</tbody>
     </table></div>`;
   return `
     ${availCore.length?`<div class="seg" style="margin:10px 0">${availCore.map(tabBtn).join('')}</div>`:''}
-    ${availMore.length?`<details class="stand-group rank-more"><summary>${t('rank.more')}</summary><div class="seg">${availMore.map(tabBtn).join('')}</div></details>`:''}
+    ${availMore.length?`<details class="stand-group rank-more" ${Coll.get('rm',lid||'common',false)?'open':''} data-fold="rm" data-key="${esc(lid||'common')}"><summary>${t('rank.more')}</summary><div class="seg">${availMore.map(tabBtn).join('')}</div></details>`:''}
     ${rows.length?table:`<div class="empty-tip">${esc(t('league.noData'))}</div>`}`;
 }
 function bracketHtml(detail){
@@ -2650,6 +2922,7 @@ let rankReq = 0;
 function fillRankBody(body, detail, sport, lid){
   body.innerHTML = standingsTable(detail, sport);
   bindSummaryStand(body, detail, sport, lid);
+  bindGroupFold(body);
 }
 async function renderRank(){
   const host = $('#rank-detail'); const my = ++rankReq;
@@ -2660,7 +2933,7 @@ async function renderRank(){
   host.innerHTML = summaryHead(t('rank.title'),t('rank.sub')) + summaryFilterHtml() + valid.map(x=>{
     const n=(x.detail.standings||[]).length;
     const unit=(x.meta.sport==='billiards')?t('table.player'):t('table.team');
-    return `<details class="lg-block" data-lid="${x.id}" data-sport="${x.meta.sport||'basketball'}">
+    return `<details class="lg-block" ${Coll.get('blocks',x.id,false)?'open':''} data-lid="${x.id}" data-sport="${x.meta.sport||'basketball'}">
       <summary class="lg-head"><span class="lg-name">${esc(x.meta.name)}</span><span class="lg-meta num">${n} ${unit}</span></summary>
       <div class="lg-body"></div></details>`;
   }).join('');
@@ -2668,6 +2941,7 @@ async function renderRank(){
   host.querySelectorAll('details.lg-block').forEach(det=>{
     det.addEventListener('toggle', async ()=>{
       const lid=det.dataset.lid, sport=det.dataset.sport, body=det.querySelector('.lg-body');
+      Coll.set('blocks', lid, det.open);
       if(!det.open) return;
       if(!body.dataset.loaded){
         body.dataset.loaded='1';
@@ -2697,7 +2971,7 @@ async function renderSchedule(){
   if (!valid.length){ host.innerHTML = summaryHead(t('nav.schedule'),t('schedule.empty')) + summaryFilterHtml() + `<div class="empty-tip">${esc(t('schedule.emptyTip'))}</div>`; bindSummaryTabs(host); return; }
   host.innerHTML = summaryHead(t('schedule.title'),t('schedule.sub')) + summaryFilterHtml() + valid.map(x=>{
     const n=(x.detail.schedule||[]).length;
-    return `<details class="lg-block" data-lid="${x.id}">
+    return `<details class="lg-block" ${Coll.get('blocks',x.id,false)?'open':''} data-lid="${x.id}">
       <summary class="lg-head"><span class="lg-name">${esc(x.meta.name)}</span><span class="lg-meta num">${n} 场</span></summary>
       <div class="lg-body"></div></details>`;
   }).join('');
@@ -2705,6 +2979,7 @@ async function renderSchedule(){
   host.querySelectorAll('details.lg-block').forEach(det=>{
     det.addEventListener('toggle', async ()=>{
       const lid=det.dataset.lid, body=det.querySelector('.lg-body');
+      Coll.set('blocks', lid, det.open);
       if(!det.open) return;
       if(!body.dataset.loaded){
         body.dataset.loaded='1';
@@ -2736,7 +3011,7 @@ function fillPlayersBody(body, detail, lid, sport){
     <div class="rank-list">
       ${rows.map((r,i)=>`<div class="rank-item">
         <span class="idx num">${i+1}</span>
-        <span><span class="p-name">${bilingualNameHtml(r.name, r.en, lid)}</span><br><span class="p-team">${esc(r.team)}</span></span>
+        <span>${playerStarHtml(r.team,r.name)}<span class="p-name">${bilingualNameHtml(r.name, r.en, lid)}</span><br><span class="p-team">${esc(r.team)}</span></span>
         <span class="p-val num">${r.val}</span></div>`).join('')}
     </div>`;
   body.querySelectorAll('[data-ptab]').forEach(b=>b.addEventListener('click',()=>{
@@ -2744,6 +3019,7 @@ function fillPlayersBody(body, detail, lid, sport){
     const item = summaryData.find(x=>x.id===lid);
     fillPlayersBody(body, item?item.detail:d, lid, sport);
   }));
+  bindFollowStars(body, ()=>fillPlayersBody(body, d, lid, sport));
 }
 let playersReq = 0;
 async function renderPlayers(){
@@ -2757,7 +3033,7 @@ async function renderPlayers(){
   }
   host.innerHTML = summaryHead(t('players.title'),t('players.sub')) + summaryFilterHtml() + valid.map(x=>{
     const n=Object.values(x.detail.rankings).reduce((a,arr)=>a+(arr||[]).length,0);
-    return `<details class="lg-block" data-lid="${x.id}" data-sport="${x.meta.sport||'basketball'}">
+    return `<details class="lg-block" ${Coll.get('blocks',x.id,false)?'open':''} data-lid="${x.id}" data-sport="${x.meta.sport||'basketball'}">
       <summary class="lg-head"><span class="lg-name">${esc(x.meta.name)}</span><span class="lg-meta num">${n} 人</span></summary>
       <div class="lg-body"></div></details>`;
   }).join('');
@@ -2765,6 +3041,7 @@ async function renderPlayers(){
   host.querySelectorAll('details.lg-block').forEach(det=>{
     det.addEventListener('toggle', async ()=>{
       const lid=det.dataset.lid, sport=det.dataset.sport, body=det.querySelector('.lg-body');
+      Coll.set('blocks', lid, det.open);
       if(!det.open) return;
       if(!body.dataset.loaded){
         body.dataset.loaded='1';
@@ -2822,6 +3099,7 @@ async function renderLeague(leagueId){
     else body.innerHTML = rankingsList(detail, meta.sport, leagueId);
     bindStandHeaders(body, detail, meta);
     bindRankTabs(body, detail, meta.sport, leagueId);
+    bindFollowStars(body, paint);
   };
   paint();
   host.querySelectorAll('[data-ltab]').forEach(b=>b.addEventListener('click',()=>{
@@ -3324,7 +3602,13 @@ function specialEventVisible(meta, detail){
   if(meta.specialStart||meta.specialEnd||meta.startDate||meta.endDate) return eventWindowActive(meta);
   return false;
 }
+function bindGroupFold(host){
+  host.querySelectorAll('details[data-fold]').forEach(d=>{
+    d.addEventListener('toggle',()=>{ Coll.set(d.dataset.fold, d.dataset.key, d.open); });
+  });
+}
 function bindStandHeaders(host, detail, meta){
+  bindGroupFold(host);
   host.querySelectorAll('[data-stand]').forEach(th=>{
     th.addEventListener('click',()=>{
       const k=th.dataset.stand;
@@ -3336,6 +3620,7 @@ function bindStandHeaders(host, detail, meta){
   });
 }
 function bindRankTabs(host, detail, sport, lid){
+  bindGroupFold(host);
   host.querySelectorAll('[data-rank]').forEach(b=>b.addEventListener('click',()=>{
     state.rankTab=b.dataset.rank;
     host.innerHTML=rankingsList(detail, sport, lid);
@@ -3350,6 +3635,7 @@ function bindRankTabs(host, detail, sport, lid){
   }));
 }
 function bindSummaryStand(host, detail, sport, lid){
+  bindGroupFold(host);
   host.querySelectorAll('[data-stand]').forEach(th=>{
     th.addEventListener('click',()=>{
       const k=th.dataset.stand;
@@ -3410,8 +3696,8 @@ const PLAY_META = {
   violation:{ color:'#FBBF24',       icon:'foul' },
   other:    { color:'var(--text-3)',  icon:'objective' }
 };
-const flowCollapsed = {};
-const flowOlder = {};
+const flowCollapsed = Object.assign({}, Coll.bag('flow'));
+const flowOlder = Object.assign({}, Coll.bag('older'));
 const FLOW_RECENT = 8;
 /* 场地缩略图当前筛选的节次；null 表示全场 */
 let courtPeriod = null;
@@ -3421,7 +3707,7 @@ function groupPlays(plays){
   (plays||[]).forEach(p=>{ (map[p.period]=map[p.period]||[]).push(p); });
   return Object.keys(map).map(Number).sort((a,b)=>b-a).map(period=>({period, items:map[period]}));
 }
-const cardCollapsed = {};
+const cardCollapsed = Object.assign({}, Coll.bag('cards'));
 function playKey(p){ return `${p.period}|${p.clock}|${p.desc}`; }
 const RESULT_LABEL_KEY = { made:'flow.res.made', miss:'flow.res.miss', assist:'flow.res.assist', steal:'flow.res.steal', rebound:'flow.res.rebound', foul:'flow.res.foul', sub:'flow.res.sub', timeout:'flow.res.timeout', turnover:'flow.res.turnover', block:'flow.res.block', violation:'flow.res.violation', other:'flow.res.other' };
 function playRowHtml(g, p){
@@ -3497,6 +3783,7 @@ function bindFlow(host, g){
     head.addEventListener('click', ()=>{
       const period = Number(head.dataset.period);
       flowCollapsed[period] = !flowCollapsed[period];
+      Coll.set('flow', period, flowCollapsed[period]);
       /* 动作流折叠/展开不再联动球场缩略图投点；节次筛选改由球场下方下拉控件控制 */
       $('#flow-host').innerHTML = playFlowHtml(g);
       bindFlow(host, g);
@@ -3506,6 +3793,7 @@ function bindFlow(host, g){
     btn.addEventListener('click', ()=>{
       const period = Number(btn.dataset.older);
       flowOlder[period] = !flowOlder[period];
+      Coll.set('older', period, flowOlder[period]);
       $('#flow-host').innerHTML = playFlowHtml(g);
       bindFlow(host, g);
     });
@@ -3515,6 +3803,7 @@ function bindFlow(host, g){
     row.addEventListener('click', ()=>{
       const k = row.dataset.card;
       cardCollapsed[k] = !cardCollapsed[k];
+      Coll.set('cards', k, cardCollapsed[k]);
       $('#flow-host').innerHTML = playFlowHtml(g);
       bindFlow(host, g);
     });
@@ -3551,20 +3840,16 @@ async function renderGame(gameId){
   if (!g){ host.innerHTML = `<div class="empty-tip">${esc(t('league.noData'))}</div>`; return; }
   pushHistory('game', gameId, `${g.home.name} vs ${g.away.name}`);
   recordRef(g);
-  /* 进入新比赛时重置折叠状态，避免上一场的展开/收起状态串场 */
-  Object.keys(flowCollapsed).forEach(k=>delete flowCollapsed[k]);
-  Object.keys(flowOlder).forEach(k=>delete flowOlder[k]);
-  Object.keys(cardCollapsed).forEach(k=>delete cardCollapsed[k]);
+  /* 折叠状态跨比赛保留：仅对还没有记忆的节次给默认值（最新节展开，其余收起），不主动清空用户手动操作过的状态 */
   courtPeriod = null;
   const upcoming = g.status==='upcoming';
-  /* 折叠状态：最新节次默认展开，其余收起；已展开/收起的状态保留 */
   const periods = groupPlays(g.plays).map(x=>x.period);
-  periods.forEach((p,i)=>{ flowCollapsed[p] = i!==0; });
+  periods.forEach((p,i)=>{ if(!Object.prototype.hasOwnProperty.call(flowCollapsed,p)) flowCollapsed[p] = i!==0; });
   const done = g.status==='done';
-  const bjTime = g.localTime || (String(g.utc8||'').match(/\d{1,2}:\d{2}/)||[])[0] || '';
+  const dptC = primaryTime(g);
   const localTzHtml = (g.localTz==='Asia/Shanghai') ? '' : locTimeHtml(g);
   const clockText = upcoming
-    ? `${esc(gameDateLabel(g))} 开赛 北京 ${esc(bjTime)}${localTzHtml?`（${localTzHtml}）`:''}`
+    ? `${esc(dptC?[dptC.datePart,dptC.time].filter(Boolean).join(' '):gameDateLabel(g))}${localTzHtml?`（${localTzHtml}）`:''}`
     : done ? '全场结束' : `${esc(g.quarter)} · ${esc(g.clock)}`;
 
   const cfg = SPORT_CFG[g.sport] || SPORT_CFG.basketball;
@@ -3626,15 +3911,19 @@ async function renderGame(gameId){
       <h3>${isTennis?t('detail.tennisRank'):t('detail.stats')}</h3>
       <div id="stats-host">${statsHtml}</div>
     </div>`;
+  const dpt = primaryTime(g);
+  const dLocal = !!(g.localTime && dpt && dpt.tz !== (g.localTz||''));
+  const dLocalLabel = g.localTz==='Asia/Shanghai' ? t('detail.beijing') : t('detail.localTime');
+  const dptLabel = Store.settings.displayTz==='match' ? t('detail.localTime') : t('detail.displayTime');
   const simpleBlock = simple ? `
     <div class="detail-block">
       <h3>${t('detail.info')}</h3>
       <div class="simple-info">
         <div><span class="si-label">${t('detail.status')}</span><span>${st.text}</span></div>
-        <div><span class="si-label">${t('detail.date')}</span><span class="num">${esc(gameDateLabel(g))}</span></div>
-        <div><span class="si-label">${t('detail.beijing')}</span><span class="num">${esc(g.utc8)}</span></div>
-        ${g.localTime?`<div><span class="si-label">${t('detail.localTime')}</span><span>${locTimeHtml(g)}</span></div>`:''}
-        ${g.score?`<div><span class="si-label">${t('detail.result')}</span><span class="num">${g.score.home} : ${g.score.away}</span></div>`:''}
+        ${g.tourney?`<div><span class="si-label">${t('detail.tourney')}</span><span>${esc(tourneyName(g.tourney))}</span></div>`:''}
+        ${dpt?`<div><span class="si-label">${esc(dptLabel)}</span><span class="num">${esc([dpt.datePart,dpt.time].filter(Boolean).join(' '))}</span></div>`:`<div><span class="si-label">${t('detail.date')}</span><span class="num">${esc(gameDateLabel(g))}</span></div>`}
+        ${dLocal?`<div><span class="si-label">${dLocalLabel}</span><span>${locCityTime(g)}</span></div>`:''}
+        ${(!upcoming && !noScore && g.score)?`<div><span class="si-label">${t('detail.result')}</span><span class="num">${g.score.home} : ${g.score.away}</span></div>`:''}
       </div>
     </div>` : '';
 
@@ -3708,7 +3997,7 @@ function pushHistory(kind, id, name){
 function clearHistory(){ Store.history = []; }
 
 /* ---------- 我的视图 ---------- */
-let meCollapsed = {};
+let meCollapsed = Object.assign({}, Coll.bag('me'));
 async function renderMe(){
   const host = $('#me-detail');
   const follows = Store.follows.slice().sort((a,b)=>b.ts-a.ts);
@@ -3786,6 +4075,7 @@ async function renderMe(){
 
   host.querySelectorAll('[data-me-toggle]').forEach(h=>h.addEventListener('click',()=>{
     const k=h.dataset.meToggle; meCollapsed[k]=!meCollapsed[k];
+    Coll.set('me', k, meCollapsed[k]);
     const sec=$('#sec-'+k); if(sec) sec.classList.toggle('collapsed', !!meCollapsed[k]);
   }));
   host.querySelectorAll('[data-unfollow]').forEach(b=>b.addEventListener('click',()=>{
@@ -3886,6 +4176,12 @@ function renderSettings(){
         <select class="form-input" data-setting="nameLang" style="min-width:150px">
           <option value="zh" class="${s.nameLang==='zh'?'active':''}">${t('name.zh')}</option>
           <option value="en" class="${s.nameLang==='en'?'active':''}">${t('name.en')}</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div><div class="f-label">${t('settings.displayTz')}</div><div class="f-hint">${t('settings.displayTzHint')}</div></div>
+        <select class="form-input" data-setting="displayTz" style="min-width:170px">
+          ${TZ_OPTIONS.map(o=>`<option value="${o.v}" ${s.displayTz===o.v?'selected':''}>${esc(o.label)}</option>`).join('')}
         </select>
       </div>
       <div class="form-row">

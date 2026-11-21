@@ -1,4 +1,4 @@
-# 三端架构与适配层说明（v0.2.0）
+# 三端架构与适配层说明（v0.2.1）
 
 ## 整体架构
 
@@ -26,7 +26,7 @@
 
 ## 适配层与数据源
 
-| Adapter | 数据源 | 覆盖范围（0.2.0） | 取数方式 |
+| Adapter | 数据源 | 覆盖范围（0.2.1） | 取数方式 |
 | --- | --- | --- | --- |
 | EspnAdapter | ESPN 公开 API | NBA、WNBA、NCAA 等可直连项目 | 浏览器/WebView 直连 |
 | ProxyAdapter | 本地代理回退 | WCBA 等旧官网 HTML/JSON | 经 `127.0.0.1:8787` 转发 |
@@ -42,6 +42,7 @@
 - 作用：代为请求不开放 CORS 的国内公开源，解析成前端统一结构后返回，并补 `Access-Control-Allow-Origin: *`。
 - 端点：`/proxy/games/all`（赛程聚合，内部并发多源去重）、`/proxy/<league>/games|league`（旧官网回退）、`/proxy/tencent/games|league|game`（腾讯转发）、`/proxy/raw?url=`（通用备用）。
 - 模块两用：直接 `node server.js` 启动；被 Electron 主进程 `require` 时导出 `startProxy(port)`，不自行监听。
+- 手机端不运行 Node：安卓工程内以 Kotlin 按同一套适配器与回包结构复刻该代理（见「手机端」节），端点口径与本表一致。
 
 ## PC 端（Electron）
 
@@ -52,7 +53,9 @@
 ## 手机端（WebView 混合壳）
 
 - 原生 Android 工程，`MainActivity` 内一个 WebView，离线加载 `assets/index.html`。
-- 手机端无 Node 运行时，无法内嵌本地代理：腾讯/旧官网等需代理的源在手机端走空态；可直连的公开源正常。
+- **原生内嵌本地代理**：WebView `shouldInterceptRequest` 拦截回环地址 `127.0.0.1:8787`（含 `localhost` / `::1`），由 Kotlin 代理层（`ProxyCore` / `ProxyRouter` / `ProxyTencent` / `ProxyAdapters` / `ProxyOther` / `ProxyDetail`）在后台线程代为请求上游公开源，解析成与 Node 代理一致的前端统一结构后回 `WebResourceResponse`。
+- 手机端**不依赖 Node 运行时、不起端口服务、不依赖外部服务器**，零第三方依赖；仅对回环地址放行明文流量（`res/xml/network_security_config.xml`），其余资源走系统网络栈。
+- 复刻范围与 `proxy/server.js` 对齐：ESPN 透传、腾讯 feeds/rank/rankings/stat、CBA/WCBA、斯诺克、直播吧、懂球帝 HTML 解析、CBA 官网 AES-128-ECB 解密详情；单源超时降级空列表，内存 30s 短缓存。
 - 页面不可见时暂停 WebView 与 JS 计时器，回前台恢复；返回键优先 WebView 历史回退。
 
 ## 数据更新分层
@@ -63,9 +66,10 @@
 | 榜单类 | 积分榜、球员榜、近 5 场战绩、排名 | 每轮赛后或每日更新 |
 | 基础资料 | 名单、位置、教练、译名 | 有变动即更新 |
 
-## 当前限制（0.2.0）
+## 当前限制（0.2.1）
 
 - 数据均来自公开免费源；付费/登录态内容、视频回放不抓取。
 - 日职联、WTA、美网/温网/法网的腾讯赛事 ID 待有赛程时补录，当前空态。
 - CBA 等腾讯源暂无投篮坐标与逐回合动作流；场地点位与动作流待上游补坐标后呈现。
+- 斯诺克当前接入 WST 官方源（英文），选手名 / 赛事名经前端中文对照层显示；中文站实时赛程与排名互补链路待后续接入。
 - 完整逐回合球权 / 坐标类实时数据需付费专业数据源，免费档一般只到比分、节次、时钟与累计统计。

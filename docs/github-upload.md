@@ -2,8 +2,8 @@
 
 本仓库当前为本地骨架，尚未关联远程、尚未推送。拿到 GitHub 仓库地址后按下面步骤执行即可。
 
-> **当前基线（2026-11-21，v0.2.0）**：0.1.0 封板基线之后的赛程取数并发与缓存提速版本；0.1.0 源文件快照见 `_backup/baseline-0.1.0/`。
-> 本机暂未安装 Git；待 Git 环境就绪后，先按第 1 节 `git init` 提交基线，再按第 4 节打对应标签（当前 `v0.2.0`）并上传 `releases/` 产物。
+> **当前基线（2026-11-21，v0.2.1）**：0.2.0 赛程取数并发与缓存提速之后的斯诺克中文译名与赛事名对照版本；手机端已内嵌 Kotlin 本地代理（复刻 Node 适配器），不再依赖手机端 Node 运行时。0.1.0 源文件快照见 `_backup/baseline-0.1.0/`。
+> 本机暂未安装 Git；待 Git 环境就绪后，先按第 1 节 `git init` 提交基线，再按第 4 节打对应标签（当前 `v0.2.1`）并上传 `releases/` 产物。
 
 ## 1. 初始化本地仓库（如尚未 init）
 
@@ -41,8 +41,8 @@ git push -u origin main
 3. 打 Tag：
 
 ```bash
-git tag -a v0.2.0 -m "赛程取数并发与缓存提速"
-git push origin v0.2.0
+git tag -a v0.2.1 -m "斯诺克中文译名与赛事名对照"
+git push origin v0.2.1
 ```
 
 4. 在 GitHub 仓库 **Releases → Draft a new release**，选择对应 Tag，上传 `releases/` 内的 zip / apk 作为 Release 附件（大二进制不进 git，只挂在 Release）。

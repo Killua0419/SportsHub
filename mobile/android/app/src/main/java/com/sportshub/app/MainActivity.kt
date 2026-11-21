@@ -3,15 +3,21 @@ package com.sportshub.app
 import android.app.Activity
 import android.os.Bundle
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
 
 /**
- * 纯 WebView 混合壳：
- * - 加载 assets/index.html，页面通过公开数据源联网拉取赛事；无网络或无源项目显示空态；
+ * 纯 WebView 混合壳（内嵌原生本地代理）：
+ * - 加载 assets/index.html；页面把数据请求拼到 http://127.0.0.1:8787/proxy/ 路径；
+ * - shouldInterceptRequest 拦截回环代理地址，由 ProxyRouter 在原生层代为请求上游公开源并回包，
+ *   手机端无需 Node 运行时、不依赖外部服务器；无网络或无源项目显示空态。
  * - 退后台暂停 WebView 与 JS 计时器，回前台恢复，降低功耗；
- * - 不引入额外原生桥接与第三方依赖，尽量减小安装包体积。
+ * - 不引入额外第三方依赖，尽量减小安装包体积。
  */
 class MainActivity : Activity() {
 
@@ -41,11 +47,37 @@ class MainActivity : Activity() {
         webView.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean = true
         }
+
         webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean = false
+            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+
+            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                val uri = request?.url ?: return null
+                val host = uri.host ?: return null
+                // 仅拦截本地代理回环地址（默认端口 8787）；其余资源放行走系统网络栈
+                val isLoopback = host == "127.0.0.1" || host == "localhost" || host == "::1"
+                if (!isLoopback) return null
+                if (uri.port != -1 && uri.port != 8787) return null
+
+                val res = ProxyRouter.route(uri)
+                val mime = res.contentType.substringBefore(';').trim().ifBlank { "application/json" }
+                val reason = reasonPhrase(res.status)
+                val headers = HashMap(res.headers)
+                val stream = ByteArrayInputStream(res.body.toByteArray(StandardCharsets.UTF_8))
+                return WebResourceResponse(mime, "UTF-8", res.status, reason, headers, stream)
+            }
         }
 
         webView.loadUrl("file:///android_asset/index.html")
+    }
+
+    private fun reasonPhrase(code: Int): String = when (code) {
+        200 -> "OK"
+        400 -> "Bad Request"
+        403 -> "Forbidden"
+        404 -> "Not Found"
+        502 -> "Bad Gateway"
+        else -> "Error"
     }
 
     override fun onPause() {
