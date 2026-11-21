@@ -28,6 +28,7 @@ PROXY_PORT=9000 node server.js
 
 | 端点 | 说明 | 上游 |
 |---|---|---|
+| `GET /proxy/games/all` | 赛程聚合：内部并发拉取腾讯各联赛、WCBA、斯诺克等源，按 id 去重后一次性返回；单源 3s 超时降级，代理侧 30s 短缓存 | 多源并发聚合 |
 | `GET /proxy/tencent/games?league=<id>` | 腾讯赛程/比分（统一 game[]） | 腾讯体育 feeds |
 | `GET /proxy/tencent/league?league=<id>` | 腾讯积分榜 + 赛程表 | 腾讯体育排名 / feeds |
 | `GET /proxy/tencent/game?mid=<联赛ID:比赛ID>` | 单场名单 / 技术统计 / 事件流（league 可省略，按 mid 前缀反查） | 腾讯体育单场统计 / 详情 |

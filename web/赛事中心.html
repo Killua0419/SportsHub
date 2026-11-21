@@ -76,7 +76,7 @@ ul{list-style:none}
 /* ============ 类别 Tab ============ */
 .tabs{
   display:flex;gap:6px;overflow-x:auto;padding:12px 18px 6px;
-  scrollbar-width:none;
+  scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch;
 }
 .tabs::-webkit-scrollbar{display:none}
 .tab{
@@ -88,7 +88,7 @@ ul{list-style:none}
   border-color:transparent;font-weight:700;box-shadow:0 6px 18px rgba(34,211,238,.35);
 }
 .tab .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;background:currentColor}
-.sub-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none}
+.sub-tabs{display:flex;gap:6px;overflow-x:auto;padding:0 18px 10px;scrollbar-width:none;touch-action:pan-x;-webkit-overflow-scrolling:touch}
 .sub-tabs::-webkit-scrollbar{display:none}
 .sub-tab{flex:0 0 auto;padding:5px 11px;border-radius:8px;font-size:12px;color:var(--text-2);background:transparent;border:1px dashed var(--line);white-space:nowrap}
 .sub-tab.active{border-style:solid;border-color:var(--violet);color:var(--cyan);background:rgba(139,124,255,.14)}
@@ -168,7 +168,9 @@ ul{list-style:none}
   padding:11px 14px;border-radius:var(--radius-sm);
   border:1.5px dashed rgba(139,124,255,.45);background:rgba(139,124,255,.1);
   color:var(--text-3);backdrop-filter:blur(10px);
+  opacity:1;transition:opacity .8s ease;
 }
+.ad-slot.ad-dim{opacity:.2}
 .ad-slot .ad-tag{flex:0 0 auto;font-size:10px;font-weight:800;letter-spacing:1px;color:var(--violet);border:1px solid rgba(139,124,255,.4);border-radius:6px;padding:2px 7px}
 .ad-slot .ad-text{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--text-2)}
 .ad-slot .ad-hint{flex:1 1 auto;font-size:11px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -202,6 +204,7 @@ td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-
 .rank-item{display:grid;grid-template-columns:34px 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-radius:var(--radius-sm);background:var(--card);border:1px solid var(--line)}
 .rank-item .idx{font-size:15px;font-weight:800;color:var(--violet)}
 .rank-item .p-name{font-size:14px;font-weight:700}
+.rank-item .p-en{font-size:11px;color:var(--text-3);font-weight:500}
 .rank-item .p-team{font-size:11px;color:var(--text-3)}
 .rank-item .p-val{font-size:18px;font-weight:800;color:var(--cyan)}
 
@@ -235,13 +238,48 @@ td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-
 .court-meta{flex-wrap:wrap;gap:6px 12px}
 .court-period{font-size:12px;font-weight:700;color:var(--cyan)}
 .court-hit{font-size:12px;color:var(--text-2)}
+.court-select{font-size:12px;font-weight:700;color:var(--cyan);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:5px 10px;outline:none;cursor:pointer;max-width:46%}
 
 .detail-block{margin-top:16px}
+.predict-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);padding:14px;display:flex;flex-direction:column;gap:12px}
+.predict-chance{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.pc-team{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.predict-chance .pc-team:last-child{text-align:right}
+.pc-bar{flex:1;height:8px;border-radius:5px;overflow:hidden;display:flex;background:rgba(255,255,255,.08)}
+.pc-bar .pc-h{display:block;height:100%;background:var(--cyan)}
+.pc-bar .pc-a{display:block;height:100%;background:var(--pink)}
+.pc-score{display:flex;align-items:center;justify-content:center;gap:12px}
+.pc-vs{color:var(--text-3);font-weight:700}
+.pc-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pc-hint{font-size:11px;color:var(--text-3)}
+.pc-score-num{font-size:20px;font-weight:800;min-width:56px;text-align:center}
+.pc-actions{display:flex;gap:8px}
+.mini-btn[disabled]{opacity:.4;cursor:not-allowed}
+.mini-btn[disabled]:hover{border-color:var(--line);background:var(--card-2);color:var(--text-2)}
 .detail-block h3{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .detail-block h3::before{content:"";width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--pink),var(--violet))}
+.lg-block{margin-top:12px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.lg-block>summary{display:flex;align-items:center;gap:8px;padding:14px 16px;cursor:pointer;list-style:none}
+.lg-block>summary::before{content:'▸';font-size:12px;color:var(--text-3)}
+.lg-block[open]>summary::before{content:'▾'}
+.lg-head .lg-name{font-size:15px;font-weight:700;flex:1}
+.lg-head .lg-meta{font-size:12px;color:var(--text-3)}
+.lg-body{padding:0 16px 16px}
 .vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* 篮球详情顶部：队标 / 比分 / 队名（场地缩略图下移到此块之下） */
+.det-head{border-radius:var(--radius);border:1px solid var(--line);background:var(--card);padding:16px 14px;margin-top:12px}
+.det-head .dh-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}
+.det-head .dh-score{font-size:26px;font-weight:800;letter-spacing:1px;white-space:nowrap;text-align:center}
+.det-head .dh-score .vs{font-size:13px;color:var(--text-3);font-weight:500}
+.det-head .dh-meta{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;justify-content:center;gap:14px;font-size:12px;color:var(--text-2);flex-wrap:wrap}
+/* 技术统计：主 / 客队分组 */
+.stat-group{margin-top:14px}
+.stat-group:first-child{margin-top:0}
+.stat-group-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin:2px 2px 8px}
+.stat-group-title .g-logo{width:24px;height:24px;object-fit:contain;border-radius:6px}
+.stat-group-title .g-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
 .vs-panel{border-radius:var(--radius);background:var(--card);border:1px solid var(--line);padding:14px}
-.vs-panel .t-name{font-size:15px;font-weight:800;margin-bottom:8px}
+.vs-panel .t-name{font-size:15px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .vs-panel .t-row{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);padding:4px 0}
 .vs-panel .t-row b{color:var(--text)}
 .mini-form{display:flex;gap:4px;margin-top:6px}
@@ -269,8 +307,18 @@ td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-
 .stat-table th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
 .stat-table th.sortable:hover{color:var(--cyan)}
 .stat-table th.sortable.on{color:var(--cyan)}
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{color:var(--cyan)}
+th.sortable.on{color:var(--cyan)}
+.stand-group{margin-top:12px}
+.stand-group:first-child{margin-top:0}
+.stand-group>summary{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;margin:2px 2px 8px;cursor:pointer;list-style:none}
+.stand-group>summary::before{content:'▸';font-size:11px;color:var(--text-3)}
+.stand-group[open]>summary::before{content:'▾'}
 .stat-table td.team-cell{justify-content:center;text-align:center}
 .stat-table td.num{text-align:center}
+.stat-table tr.stat-total td{font-weight:800;border-top:1px solid var(--line);background:rgba(139,124,255,.10)}
+.stat-table tr.stat-total:hover td{background:rgba(139,124,255,.10)}
 .empty-tip{padding:30px 10px;text-align:center;color:var(--text-3);font-size:13px}
 
 /* ============ 回合动作流 ============ */
@@ -349,7 +397,7 @@ td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-
   #game-list{grid-template-columns:repeat(3,1fr)}
   /* 详情页横屏两栏：返回条与战术板满宽，其余模块左右分栏 */
   #game-detail{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
-  #game-detail .back-bar,#game-detail .court-card{grid-column:1/-1}
+  #game-detail .back-bar,#game-detail .court-card,#game-detail .det-head{grid-column:1/-1}
   #game-detail .detail-block{margin-top:18px}
 }
 
@@ -386,6 +434,10 @@ td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-
 .me-section h3{font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
 .me-section h3::before{content:"";width:4px;height:14px;border-radius:2px;background:linear-gradient(180deg,var(--cyan),var(--pink))}
 .me-list{display:flex;flex-direction:column;gap:10px}
+.f-toggle{cursor:pointer;user-select:none}
+.f-arrow{margin-left:auto;font-size:12px;color:var(--text-3);transition:transform .2s}
+.me-section.collapsed .me-list{display:none}
+.me-section.collapsed .f-arrow{transform:rotate(-90deg)}
 .me-entry{
   display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:var(--radius-sm);
   background:var(--card);border:1px solid var(--line);width:100%;text-align:left;
@@ -412,6 +464,8 @@ td.team-cell .badge{width:26px;height:26px;border-radius:8px;display:grid;place-
 .src-actions{display:flex;gap:8px;margin-top:12px}
 .star-btn{color:var(--text-3);font-size:18px;line-height:1;padding:4px 6px}
 .star-btn.active{color:#FBBF24}
+.star-btn.sm{font-size:14px;padding:2px 4px}
+.p-row-top{display:flex;align-items:center;gap:6px}
 
 /* ===== 设置 / 数据源弹窗 ===== */
 .modal-mask{position:fixed;inset:0;background:rgba(8,5,24,.66);backdrop-filter:blur(3px);display:grid;place-items:center;z-index:60;padding:20px}
@@ -463,6 +517,12 @@ select.form-input option:checked{background:var(--select-bg);color:var(--select-
 .src-single{background:rgba(148,163,184,.14);color:var(--text-2);border-color:rgba(148,163,184,.3)}
 .src-diff{background:rgba(251,191,36,.14);color:#FBBF24;border-color:rgba(251,191,36,.35)}
 .src-none{background:rgba(148,163,184,.1);color:var(--text-3);border-color:rgba(148,163,184,.25)}
+.pref-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.pref-row:first-of-type{border-top:none}
+.pref-row .f-label{font-size:13px;font-weight:600;flex:0 0 auto}
+.pref-fbs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pref-fb{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-2);cursor:pointer}
+.pref-fb input{accent-color:var(--win)}
 .cache-meta{font-size:12px;color:var(--text-2);padding:8px 0}
 </style>
 </head>
@@ -499,7 +559,6 @@ select.form-input option:checked{background:var(--select-bg);color:var(--select-
         <button class="active" data-date="today">今天</button>
         <button data-date="tomorrow">明天</button>
         <button data-date="day3">后天</button>
-        <button data-date="all">近3天</button>
       </div>
       <div class="sort-switch">
         <span id="sort-label">排序：</span>
@@ -615,11 +674,11 @@ const SPORTS = [
  * worldcup: 杯赛标签按时间窗排序；startDate/endDate: YYYY-MM-DD（提前2个月置顶、结束后第二个月移最右）。 */
 const LEAGUES = {
   /* ---- 篮球 ---- */
-  nba:  { id:'nba',  sport:'basketball', name:'NBA',  region:'美国 · 加拿大', country:'美国', tier:'顶级', note:'美国职业篮球联赛' },
-  cba:  { id:'cba',  sport:'basketball', name:'CBA',  region:'中国',          country:'中国', tier:'顶级', note:'中国男子篮球职业联赛' },
+  nba:  { id:'nba',  sport:'basketball', name:'NBA',  region:'美国 · 加拿大', country:'美国', tier:'顶级', special:'playoff', specialStart:'2026-04-15', specialEnd:'2026-06-30', note:'美国职业篮球联赛' },
+  cba:  { id:'cba',  sport:'basketball', name:'CBA',  region:'中国',          country:'中国', tier:'顶级', special:'playoff', specialStart:'2026-04-15', specialEnd:'2026-05-31', note:'中国男子篮球职业联赛' },
   ncaa: { id:'ncaa', sport:'basketball', name:'NCAA', region:'美国',          country:'美国', tier:'大学', note:'美国大学体育协会篮球联赛' },
-  wnba: { id:'wnba', sport:'basketball', name:'WNBA', region:'美国',          country:'美国', tier:'顶级', note:'美国女子职业篮球联赛' },
-  wcba: { id:'wcba', sport:'basketball', name:'WCBA', region:'中国',          country:'中国', tier:'顶级', note:'中国女子篮球职业联赛' },
+  wnba: { id:'wnba', sport:'basketball', name:'WNBA', region:'美国',          country:'美国', tier:'顶级', special:'playoff', specialStart:'2026-09-15', specialEnd:'2026-10-31', note:'美国女子职业篮球联赛' },
+  wcba: { id:'wcba', sport:'basketball', name:'WCBA', region:'中国',          country:'中国', tier:'顶级', special:'playoff', specialStart:'2026-03-15', specialEnd:'2026-04-30', note:'中国女子篮球职业联赛' },
 
   /* ---- 足球 ---- */
   epl:     { id:'epl',     sport:'football', name:'英超',   region:'英格兰', country:'英格兰', tier:'顶级', note:'英格兰足球超级联赛' },
@@ -628,7 +687,7 @@ const LEAGUES = {
   bundes:  { id:'bundes',  sport:'football', name:'德甲',   region:'德国',   country:'德国',   tier:'顶级', note:'德国足球甲级联赛' },
   csl:     { id:'csl',     sport:'football', name:'中超',   region:'中国',   country:'中国',   tier:'顶级', note:'中国足球协会超级联赛' },
   city:    { id:'city',    sport:'football', name:'城市联赛', region:'中国', country:'中国',   tier:'城市', note:'城市足球联赛' },
-  ucl:     { id:'ucl',     sport:'football', name:'欧冠',   region:'欧洲',   country:'欧洲',   tier:'杯赛', note:'欧洲冠军联赛' },
+  ucl:     { id:'ucl',     sport:'football', name:'欧冠',   region:'欧洲',   country:'欧洲',   tier:'杯赛', special:'knockout', specialStart:'2026-02-18', specialEnd:'2026-05-31', note:'欧洲冠军联赛' },
   jleague: { id:'jleague', sport:'football', name:'日职联', region:'日本',   country:'日本',   tier:'顶级', note:'日本职业足球联赛' },
   worldcup:{ id:'worldcup', sport:'football', name:'世界杯', region:'全球', country:'全球', tier:'杯赛', worldcup:true,
              startDate:'2026-12-20', endDate:'2027-01-20', note:'四年一届国际足联世界杯（赛程时间窗）' },
@@ -642,6 +701,7 @@ const LEAGUES = {
 
   /* ---- 桌球 ---- */
   blli:{ id:'blli', sport:'billiards', name:'中式八球', region:'中国', country:'中国', tier:'综合', note:'中式台球巡回赛' },
+  snooker:{ id:'snooker', sport:'billiards', name:'斯诺克', region:'全球', country:'全球', tier:'顶级', project:'WST 世界巡回赛', note:'世界斯诺克巡回赛（WST）官方赛程与世界排名' },
 
   /* ---- 电竞（EWC 级别六项目为主，其余简讯） ---- */
   'ewc-lol':  { id:'ewc-lol',  sport:'esports', name:'英雄联盟', region:'全球', country:'全球', tier:'综合', project:'英雄联盟', note:'EWC 电竞世界杯 · 英雄联盟' },
@@ -658,14 +718,16 @@ const SPORT_CFG = {
   basketball:{
     groupTitle: p => `第${p}节`,
     rosterTitle:'rosterTitle.basketball',
-    statsCols: [ {k:'min',label:'stat.min'}, {k:'pts',label:'stat.pts'}, {k:'ast',label:'stat.ast'}, {k:'reb',label:'stat.reb'}, {k:'stl',label:'stat.stl'}, {k:'blk',label:'stat.blk'} ],
-    rankTabs: [ {k:'pts',label:'stat.pts'}, {k:'ast',label:'stat.ast'}, {k:'reb',label:'stat.reb'} ]
+    statsCols: [ {k:'min',label:'stat.min'}, {k:'pts',label:'stat.pts'}, {k:'ast',label:'stat.ast'}, {k:'reb',label:'stat.reb'}, {k:'stl',label:'stat.stl'}, {k:'blk',label:'stat.blk'}, {k:'tov',label:'stat.tov'}, {k:'eff',label:'stat.eff'} ],
+    rankCore: [ {k:'pts',label:'stat.pts'}, {k:'reb',label:'stat.reb'}, {k:'ast',label:'stat.ast'}, {k:'stl',label:'stat.stl'}, {k:'blk',label:'stat.blk'} ],
+    rankMore: [ {k:'min',label:'stat.min'}, {k:'tov',label:'stat.tov'} ]
   },
   football:{
     groupTitle: p => p===1 ? '上半场' : '下半场',
     rosterTitle:'rosterTitle.football',
     statsCols: [ {k:'goals',label:'stat.goals'}, {k:'assists',label:'stat.assists'}, {k:'shots',label:'stat.shots'}, {k:'sot',label:'stat.sot'}, {k:'stl',label:'stat.stl'}, {k:'sv',label:'stat.sv'} ],
-    rankTabs: [ {k:'goals',label:'stat.goals'}, {k:'assists',label:'stat.assists'}, {k:'stl',label:'stat.stl'} ]
+    rankCore: [ {k:'goals',label:'stat.goals'}, {k:'assists',label:'stat.assists'}, {k:'shots',label:'stat.shots'}, {k:'sot',label:'stat.sot'}, {k:'stl',label:'stat.stl'} ],
+    rankMore: [ {k:'sv',label:'stat.sv'} ]
   },
   billiards:{
     groupTitle: p => `第${p}局`,
@@ -697,17 +759,20 @@ function filterGames(list, opts={}){
   if (opts.sortBy === 'category'){
     l.sort((a,b)=> (leagueOrder(meta(a))-leagueOrder(meta(b))) || a.leagueId.localeCompare(b.leagueId) || (a.utc8||'').localeCompare(b.utc8||''));
   } else if (opts.sortBy === 'status'){
-    const rank = { live:0, upcoming:1, done:2 };
+    const rank = { live:0, done:1, upcoming:2 };
     l.sort((a,b)=> (rank[a.status]??3)-(rank[b.status]??3) || (a.utc8||'').localeCompare(b.utc8||''));
   } else {
-    const order = { today:0, tomorrow:1, day3:2 };
     const desc = opts.sortBy !== 'timeAsc'; // timeDesc / 旧 time 默认从新到旧
     const stamp = g => ((g.dateRaw||'')+' '+(g.utc8||'')).trim();
+    const dayKey = g => g.dateRaw || _bjDateStr(g.utc8||'');
+    const started = g => (g.status==='upcoming') ? 1 : 0; /* 已开赛(进行中/完场)=0，未开赛=1 */
     const cmpTime = (a,b)=>{
+      const d = dayKey(a).localeCompare(dayKey(b));
+      if (d) return desc ? -d : d;
+      const s = started(a)-started(b);
+      if (s) return s; /* 同一天内：已开赛始终排在未开赛之上，不随升降序反转 */
       const t = stamp(a).localeCompare(stamp(b));
-      if (t) return desc ? -t : t;
-      const r = order[a.dateKey]-order[b.dateKey];
-      return desc ? -r : r;
+      return desc ? -t : t;
     };
     l.sort(cmpTime);
   }
@@ -721,14 +786,21 @@ const ESPN_LEAGUES = {
 };
 function _bjDate(iso){ const d=new Date(iso); return new Date(d.getTime()+8*3600*1000); }
 function _bjDateKey(iso){
+  if(!iso) return null;
+  const d=_bjDate(iso); if(isNaN(d.getTime())) return null;
   const nowBj=_bjDate(new Date().toISOString());
   const today=new Date(nowBj.getUTCFullYear(),nowBj.getUTCMonth(),nowBj.getUTCDate());
-  const d=_bjDate(iso); const day=new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+  const day=new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
   const diff=Math.round((day-today)/86400000);
-  return diff<=0?'today':diff===1?'tomorrow':'day3';
+  if(diff===0) return 'today';
+  if(diff===1) return 'tomorrow';
+  if(diff===2) return 'day3';
+  return null; /* 过去的比赛 / 三天以后：不进今天·明天·后天任一桶 */
 }
 function _bjTime(iso){ const d=_bjDate(iso); return String(d.getUTCHours()).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0'); }
 function _bjDateStr(iso){ const d=_bjDate(iso); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+/* UTC 日期偏移 offset 天，输出 YYYYMMDD（ESPN scoreboard 按 UTC 日期分桶，dates 参数必须用 UTC 日期） */
+function _utcYmd(offset){ const d=new Date(Date.now()+(offset||0)*86400000); return d.toISOString().slice(0,10).replace(/-/g,''); }
 function _numScore(s){ const n=parseInt(s,10); return isNaN(n)?null:n; }
 /* 美国州 / 国家 → IANA 时区（赛程接口不带场馆时区，按主场所在地近似映射；映射不到则不显示当地时间） */
 const US_STATE_TZ = {
@@ -772,6 +844,16 @@ function _hexColor(c){
 }
 function _statVal(stats, name){ const s=(stats||[]).find(x=>x.name===name); return s? (s.displayValue!=null?s.displayValue:s.value) : null; }
 async function _fetchJson(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+/* ESPN API 经本地代理出口，规避浏览器直连 SSL/CORS 受限 */
+async function _espnJson(url){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 4000);
+  try{
+    const r=await fetch(proxyBase()+'/proxy/espn?url='+encodeURIComponent(url), { signal:ctrl.signal });
+    if(!r.ok) throw new Error('espn proxy HTTP '+r.status);
+    return r.json();
+  } finally { clearTimeout(timer); }
+}
 function mapEspnEvent(e, leagueId){
   const comp=(e.competitions&&e.competitions[0])||{};
   const cs=comp.competitors||[];
@@ -785,12 +867,14 @@ function mapEspnEvent(e, leagueId){
   const meta=LEAGUES[leagueId]||{};
   const venue=comp.venue||e.venue||{};
   const tz=venueTz(venue);
+  const vAddr=venue.address||{};
+  const venueCity=vAddr.city||vAddr.state||'';
   const hScore=_numScore(home.score), aScore=_numScore(away.score);
   const hT=home.team||{}, aT=away.team||{};
   return {
     id:'espn-'+e.id, leagueId, sport:meta.sport||'basketball', source:'espn',
     status, dateKey:_bjDateKey(e.date), dateRaw:_bjDateStr(e.date),
-    localTime: tzTime(e.date, tz), localTz: tz, utc8:_bjTime(e.date),
+    localTime: tzTime(e.date, tz), localTz: tz, venueCity, utc8:_bjTime(e.date),
     quarter: status==='live' ? (st.detail||'') : (status==='done'?'完场':''),
     clock:(e.status&&e.status.displayClock)||'', eta:'',
     score:{ home:hScore, away:aScore },
@@ -812,7 +896,8 @@ function mapStandings(d, sport){
       const pct=sport==='football' ? (_statVal(st,'points')||'—') : (_statVal(st,'leagueWinPercent')||'—');
       rows.push({
         rank: seed||i+1, name:team.displayName||'—', abbr:team.abbreviation||'', color:'#22D3EE',
-        win:wins, lose:losses, pct:String(pct), streak:'—'
+        win:wins, lose:losses, pct:String(pct), streak:'—',
+        group: g.abbreviation||g.name||''
       });
     });
   });
@@ -821,7 +906,10 @@ function mapStandings(d, sport){
 /* 联赛赛程：scoreboard events → 统一赛程行；status 存状态键供视图本地化 */
 function mapSchedule(events, leagueId){
   return (events||[]).map(e=>mapEspnEvent(e, leagueId)).filter(Boolean).map(g=>({
-    date:g.dateKey, home:g.home.name, away:g.away.name,
+    date:g.dateKey, dateRaw:g.dateRaw||'', utc8:g.utc8||'',
+    home:g.home.name, homeEn:g.home.name,
+    away:g.away.name, awayEn:g.away.name,
+    city:g.venueCity||'',
     score: g.status==='upcoming' ? '—' : `${g.score.home==null?'—':g.score.home} : ${g.score.away==null?'—':g.score.away}`,
     status:g.status
   }));
@@ -870,19 +958,143 @@ function mapSummaryRoster(summary){
   return { roster, athleteMap };
 }
 function _svStat(stats, name){ const x=(stats||[]).find(s=>s.name===name); return x?x.displayValue:null; }
+/* ===== 篮球动作流：ESPN 英文事件 → 中文模板（路线 A：保留 ESPN 数据源，前端规则化中文化） =====
+ * 球员名走 tn() 中英对照，未收录的英文名原样保留；团队事件队名用 §HOME§/§AWAY§ 占位，渲染层替换。 */
+function _zhShotKind(typeText, text){
+  const t=((typeText||'')+' '+(text||'')).toLowerCase();
+  if(/dunk/.test(t)) return '扣篮';
+  if(/layup|finger.?roll/.test(t)) return '上篮';
+  if(/tip shot|tip in|tip-in/.test(t)) return '补篮';
+  if(/hook/.test(t)) return '勾手';
+  if(/alley.?oop/.test(t)) return '空接';
+  return '跳投';
+}
+function _zhFoulKind(typeText, text){
+  const t=((typeText||'')+' '+(text||'')).toLowerCase();
+  if(/offensive foul/.test(t)) return '进攻犯规';
+  if(/shooting foul/.test(t)) return '投篮犯规';
+  if(/loose ball/.test(t)) return '争抢球犯规';
+  if(/away from play/.test(t)) return '非比赛犯规';
+  return '个人犯规';
+}
+function _zhViolationKind(typeText, text){
+  const t=((typeText||'')+' '+(text||'')).toLowerCase();
+  if(/traveling|travel/.test(t)) return '走步违例';
+  if(/out of bounds/.test(t)) return '出界违例';
+  if(/delay of game/.test(t)) return '延误比赛违例';
+  if(/goaltending/.test(t)) return '干扰球违例';
+  if(/kicked ball|kick ball/.test(t)) return '脚踢球违例';
+  if(/challenge/.test(t)) return '教练挑战';
+  if(/review|replay/.test(t)) return '裁判回放复核';
+  return '违例';
+}
+/* 根据 ESPN 结构化字段 + 文本关键词组装中文动作描述；actors 已按 participants 顺序解析 */
+function buildBasketPlayZh(p, actors, side, res){
+  const nm=o=>o&&o.name?tn(o.name):'';
+  const a1=actors[0]||null, a2=actors[1]||null, a3=actors[2]||null;
+  const t=(p.type||{}).text||'', lt=(p.text||'').toLowerCase();
+  const result=res||p.result||'';
+  const team = side==='home' ? '§HOME§' : side==='away' ? '§AWAY§' : '';
+  /* 跳球 */
+  if(/jumpball|jump ball/i.test(t) || lt.includes('vs.')){
+    let s=`${nm(a1)} 与 ${nm(a2)} 跳球`;
+    if(a3&&a3.name) s+=`，${nm(a3)} 获得球权`;
+    return s;
+  }
+  /* 换人 */
+  if(result==='sub' || lt.includes('enters the game')){
+    let s=`${nm(a1)} 替补登场`;
+    if(a2&&a2.name) s+=`，换下 ${nm(a2)}`;
+    return s;
+  }
+  /* 暂停 */
+  if(result==='timeout' || /timeout/i.test(t)){
+    return /full timeout/i.test(lt) ? `${team} 长暂停` : `${team} 暂停`;
+  }
+  /* 篮板 */
+  if(result==='rebound' || /rebound/i.test(t)){
+    const off=/offensive/i.test(t)||lt.includes('offensive');
+    if(a1&&a1.name) return `${nm(a1)} ${off?'进攻':'防守'}篮板`;
+    return `${team} ${off?'进攻':'防守'}篮板（团队）`;
+  }
+  /* 盖帽：句式 "X blocks Y's ..."，a1 盖帽者，a2 投篮者 */
+  if(/blocks?/i.test(lt) || result==='block'){
+    const kind=_zhShotKind(t, lt);
+    if(a2&&a2.name) return `${nm(a1)} 盖帽 ${nm(a2)} 的${kind}`;
+    return `${nm(a1)} 盖帽`;
+  }
+  /* 抢断（独立事件；多附在失误句括号内） */
+  if(result==='steal'){
+    return `${nm(a1)} 抢断`;
+  }
+  /* 失误 */
+  if(result==='turnover' || /turnover/i.test(t)){
+    let s=`${nm(a1)} 失误`;
+    if(a2&&a2.name && /steals?/i.test(lt)) s+=`（${nm(a2)} 抢断）`;
+    return s;
+  }
+  /* 犯规 */
+  if(result==='foul' || /foul/i.test(t)){
+    const kind=_zhFoulKind(t, lt);
+    let s=`${nm(a1)} ${kind}`;
+    if(/offensive foul turnover|offensive foul/i.test(lt)) s+='（失误）';
+    return s;
+  }
+  /* 违例 / 挑战 / 回放 */
+  if(result==='violation' || /violation|challenge|review|goaltending|traveling/i.test(t)){
+    const kind=_zhViolationKind(t, lt);
+    return a1&&a1.name ? `${nm(a1)} ${kind}` : `${team} ${kind}`;
+  }
+  /* 罚球 */
+  if(/free throw/i.test(lt)){
+    const made=!!p.scoringPlay;
+    const m=lt.match(/(\d+)\s+of\s+(\d+)/);
+    const ord=m?`（第 ${m[1]} 罚 / 共 ${m[2]} 罚）`:'';
+    return `${nm(a1)} 罚球${made?'命中':'未中'}${ord}`;
+  }
+  /* 投篮 */
+  if(p.shootingPlay){
+    const kind=_zhShotKind(t, lt);
+    const pts=p.scoreValue||p.pointsAttempted||0;
+    const assist=a2&&a2.name&&/assists?/i.test(lt)?nm(a2):'';
+    if(p.scoringPlay){
+      const ptsWord=pts===3?'三分':pts===1?'一分':'两分';
+      let s=`${nm(a1)} 命中${ptsWord}${kind}`;
+      if(assist) s+=`（${assist} 助攻）`;
+      return s;
+    }
+    return `${nm(a1)} ${kind}未中`;
+  }
+  /* 助攻兜底 */
+  if(result==='assist') return `${nm(a1)} 助攻`;
+  /* 节末 / 终场 */
+  if(/end game/i.test(lt)) return '比赛结束';
+  if(/end of the/i.test(lt)){
+    const m=lt.match(/(\d+)\w*\s*quarter/);
+    return m?`第 ${m[1]} 节结束`:'本节结束';
+  }
+  /* 兜底：保留英文原文 */
+  return p.text||'';
+}
 /* 动作流 + 投篮点位：summary.plays → 统一 plays / shots；side 按 team.id 映射主客 */
 function mapSummaryPlays(summary, sideMap, athleteMap){
   const plays=[], shots=[];
   (summary.plays||[]).forEach(p=>{
     const side=sideMap[String((p.team||{}).id)]||'';
     const coord=p.coordinate||{};
-    const validCoord=coord.x!=null && Number(coord.x)>-1000;
-    const pid=(p.participants&&p.participants[0]&&p.participants[0].athlete&&p.participants[0].athlete.id)||'';
-    const actor=athleteMap[pid]||null;
+    const isFreeThrow=/free throw/i.test(p.text||'');
+    const validCoord=coord.x!=null && Number(coord.x)>-100 && Number(coord.y)>-100;
+    const actors=(p.participants||[]).map(pa=>{
+      const aid=pa.athlete&&pa.athlete.id;
+      const am=aid?athleteMap[String(aid)]:null;
+      return am||{ name:(pa.athlete&&(pa.athlete.displayName||pa.athlete.fullName))||'', num:'', pos:'' };
+    }).filter(o=>o&&o.name);
+    const actor=actors[0]||null;
     const type=((p.type||{}).text||'').toLowerCase();
     const lowerText=(p.text||'').toLowerCase();
     let result='rebound';
-    if(p.shootingPlay){ result=p.scoringPlay?'made':'miss'; }
+    if(/blocks?/i.test(lowerText)) result='block';
+    else if(p.shootingPlay){ result=p.scoringPlay?'made':'miss'; }
     else if(type.includes('substitut')||lowerText.includes('enters the game')) result='sub';
     else if(type.includes('timeout')||lowerText.includes('timeout')) result='timeout';
     else if(type.includes('steal')) result='steal';
@@ -895,12 +1107,13 @@ function mapSummaryPlays(summary, sideMap, athleteMap){
     const play={
       period:(p.period||{}).number||1, clock:(p.clock||{}).displayValue||'',
       desc:p.text||'', type:(p.type||{}).text||'', result, side,
+      descZh:buildBasketPlayZh(p, actors, side, result), actors,
       scoreValue:p.scoreValue||0, pointsAttempted:p.pointsAttempted||0,
       scoringPlay:!!p.scoringPlay, shootingPlay:!!p.shootingPlay,
       actor: actor?{ name:actor.name, num:actor.num, pos:actor.pos } : null
     };
     plays.push(play);
-    if(p.shootingPlay && validCoord){
+    if(p.shootingPlay && validCoord && !isFreeThrow){
       shots.push({ x:Number(coord.x), y:Number(coord.y), made:!!p.scoringPlay, side,
         period:(p.period||{}).number||1, playerName:actor?actor.name:'', points:p.scoreValue||0 });
     }
@@ -934,7 +1147,7 @@ function applySummaryStandings(summary, base, sideMap){
 async function fetchRecentForm(path, teamId){
   if(!teamId) return [];
   try{
-    const d=await _fetchJson(`https://site.api.espn.com/apis/site/v2/sports/${path}/teams/${teamId}/schedule`);
+    const d=await _espnJson(`https://site.api.espn.com/apis/site/v2/sports/${path}/teams/${teamId}/schedule`);
     const ev=(d.events||[]).filter(e=>{
       const c=(e.competitions||[{}])[0];
       return ((c.status||{}).type||{}).state==='post';
@@ -957,24 +1170,32 @@ async function fetchRecentForm(path, teamId){
 const EspnAdapter = {
   async getGames(opts={}){
     /* 腾讯适配器已覆盖的联赛（五大联赛/中超/CBA/网球等）不再走 ESPN，避免双份 */
-    let leagues=Object.keys(ESPN_LEAGUES).filter(l=>!TENCENT_LEAGUES[l]);
+    let leagues=Object.keys(ESPN_LEAGUES).filter(l=>!TENCENT_LEAGUES[l] || TENCENT_RANK_ONLY[l]);
     if (opts.league && opts.league!=='all') leagues=leagues.filter(l=>l===opts.league);
     const out=[];
     await Promise.all(leagues.map(async lid=>{
       try{
-        const sb=await _fetchJson('https://site.api.espn.com/apis/site/v2/sports/'+ESPN_LEAGUES[lid]+'/scoreboard');
-        (sb.events||[]).map(e=>mapEspnEvent(e,lid)).filter(Boolean).forEach(g=>out.push(g));
+        /* ESPN dates 仅支持单日且按 UTC 分桶；北京该日 00:00–24:00 跨 UTC 前一日与当日两个桶，多桶并发拉取，归桶仍按北京时间判定 */
+        const seen=new Set();
+        const dates=[...new Set([0,1,2].flatMap(o=>[o-1,o]))];
+        const sbs=await Promise.allSettled(dates.map(u=>_espnJson('https://site.api.espn.com/apis/site/v2/sports/'+ESPN_LEAGUES[lid]+'/scoreboard?dates='+_utcYmd(u))));
+        sbs.forEach(r=>{
+          (r.value&&r.value.events||[]).forEach(e=>{
+            if(seen.has(e.id)) return; seen.add(e.id);
+            const g=mapEspnEvent(e,lid); if(g) out.push(g);
+          });
+        });
       }catch(e){ /* 单源失败忽略：该联赛本轮无数据，界面走空态 */ }
     }));
     return out;
   },
   async getLeague(id){
-    if(TENCENT_LEAGUES[id]) return null;
+    if(TENCENT_LEAGUES[id] && !TENCENT_RANK_ONLY[id]) return null;
     const path=ESPN_LEAGUES[id]; if(!path) return null;
     const meta=LEAGUES[id]; if(!meta) return null;
     const sbUrl='https://site.api.espn.com/apis/site/v2/sports/'+path+'/scoreboard';
     const stUrl='https://site.api.espn.com/apis/v2/sports/'+path+'/standings';
-    const [sbR, stR]=await Promise.allSettled([_fetchJson(sbUrl), _fetchJson(stUrl)]);
+    const [sbR, stR]=await Promise.allSettled([_espnJson(sbUrl), _espnJson(stUrl)]);
     const schedule=sbR.status==='fulfilled' ? mapSchedule(sbR.value.events||[], id) : [];
     const standings=stR.status==='fulfilled' ? mapStandings(stR.value, meta.sport) : [];
     if(!standings.length && !schedule.length) return null;
@@ -988,7 +1209,7 @@ const EspnAdapter = {
     const path=ESPN_LEAGUES[base.leagueId];
     let roster=[], plays=[], shots=[], sideMap={};
     try{
-      const s=await _fetchJson('https://site.api.espn.com/apis/site/v2/sports/'+path+'/summary?event='+eid);
+      const s=await _espnJson('https://site.api.espn.com/apis/site/v2/sports/'+path+'/summary?event='+eid);
       const comp=(s.header&&s.header.competitions&&s.header.competitions[0])||{};
       (comp.competitors||[]).forEach(c=>{ sideMap[String((c.team||{}).id)]=c.homeAway; });
       const rr=mapSummaryRoster(s);
@@ -1014,41 +1235,41 @@ const EspnAdapter = {
 /* ---------- 本地/云端代理 Adapter：承接 ESPN 未覆盖、且不开放跨域的国内公开源 ----------
  * 代理服务代为请求上游公开 JSON 并解析成与 ESPN 适配器一致的统一结构；
  * 代理基址可在设置中配置（默认本机 127.0.0.1:8787）。 */
-const PROXY_LEAGUES = { wcba:'wcba' };
+const PROXY_LEAGUES = { wcba:'wcba', snooker:'snooker' };
 /* 腾讯体育转发适配器覆盖的联赛（与本地代理 TENCENT_LEAGUES 对齐）；cid 暂缺的联赛代理返回空态 */
 const TENCENT_LEAGUES = {
-  cba:1, epl:1, laliga:1, seriea:1, bundes:1, csl:1, ucl:1, jleague:1,
+  nba:1, cba:1, epl:1, laliga:1, seriea:1, bundes:1, csl:1, ucl:1, jleague:1,
   atp:1, wta:1, usopen:1, wimbledon:1, frenchopen:1
 };
 function proxyBase(){ return (Store.settings.proxyBase || 'http://127.0.0.1:8787').replace(/\/+$/, ''); }
+function _xhrJson(url, timeout=8000){
+  return new Promise((resolve,reject)=>{
+    const x=new XMLHttpRequest();
+    x.open('GET', url, true);
+    x.timeout = timeout;
+    x.onload = ()=>{ if(x.status>=200&&x.status<300){ try{ resolve(JSON.parse(x.responseText)); }catch(e){ reject(e); } } else reject(new Error('HTTP '+x.status)); };
+    x.onerror = ()=>reject(new Error('xhr error'));
+    x.ontimeout = ()=>reject(new Error('xhr timeout'));
+    x.send();
+  });
+}
 async function _proxyJson(path){
-  const r = await fetch(proxyBase() + path);
-  if(!r.ok) throw new Error('proxy HTTP ' + r.status);
-  const j = await r.json();
+  const j = await _xhrJson(proxyBase() + path);
   if(!j.ok) throw new Error(j.error || 'proxy error');
   return j.data;
 }
 /* 代理源日期为原始 YYYY-MM-DD，转成与 ESPN 一致的 today/tomorrow/day3 日期桶，供赛程列表按日过滤 */
 function _bucketFromBj(dateStr, timeStr){
-  if(!dateStr) return 'day3';
+  if(!dateStr) return null;
   const t = (timeStr || '00:00').slice(0,5);
   return _bjDateKey(`${dateStr}T${t}:00+08:00`);
 }
 const ProxyAdapter = {
   async getGames(opts={}){
-    const out = [];
-    for(const lid of Object.keys(PROXY_LEAGUES)){
-      if(opts.league && opts.league !== 'all' && opts.league !== lid) continue;
-      try{
-        (await _proxyJson('/proxy/' + PROXY_LEAGUES[lid] + '/games')).forEach(g => {
-          g.dateRaw = g.dateKey;
-          g.dateKey = _bucketFromBj(g.dateKey, g.localTime);
-          out.push(g);
-        });
-      }
-      catch(e){ /* 代理未启动/该源暂不可用：跳过，界面走空态 */ }
-    }
-    return out;
+    /* 聚合端点：一条请求拿回代理侧全部联赛（腾讯各联赛 + WCBA + 斯诺克）合并去重后的赛程，
+       避免前端对本地代理发起十几条并发连接排队。 */
+    const j = await _proxyJson('/proxy/games/all');
+    return (j||[]).map(g=>{ g.dateRaw=g.dateKey; g.dateKey=_bucketFromBj(g.dateKey,g.localTime); return g; });
   },
   async getLeague(id){
     if(!PROXY_LEAGUES[id]) return null;
@@ -1060,7 +1281,8 @@ const ProxyAdapter = {
     }catch(e){ return null; }
   },
   async getGame(id){
-    const lid = String(id).startsWith('wcba-') ? 'wcba' : null;
+    const lid = String(id).startsWith('wcba-') ? 'wcba'
+      : String(id).startsWith('snooker-') ? 'snooker' : null;
     if(!lid) return null;
     const games = await this.getGames({ league:lid });
     const base = games.find(g => g.id === id);
@@ -1072,26 +1294,22 @@ const ProxyAdapter = {
 /* ---------- 腾讯体育适配器：经本地代理转发腾讯公开赛程/排名/名单/事件 ---------- */
 const TencentAdapter = {
   async getGames(opts={}){
-    const out = [];
-    for(const lid of Object.keys(TENCENT_LEAGUES)){
-      if(opts.league && opts.league!=='all' && opts.league!==lid) continue;
-      try{
-        (await _proxyJson('/proxy/tencent/games?league='+encodeURIComponent(lid))).forEach(g => {
-          g.dateRaw = g.dateKey;
-          g.dateKey = _bucketFromBj(g.dateKey, g.localTime);
-          out.push(g);
-        });
-      }catch(e){ /* 代理未启动/该档无期：跳过，界面走空态 */ }
-    }
-    return out;
+    const lids=Object.keys(TENCENT_LEAGUES).filter(l=>l!=='nba' && (!opts.league||opts.league==='all'||opts.league===l));
+    const res=await Promise.allSettled(lids.map(async lid=>{
+      const j=await _proxyJson('/proxy/tencent/games?league='+encodeURIComponent(lid));
+      return (j||[]).map(g=>{ g.dateRaw=g.dateKey; g.dateKey=_bucketFromBj(g.dateKey,g.localTime); return g; });
+    }));
+    return res.flatMap(r=>r.value||[]);
   },
   async getLeague(id){
     if(!TENCENT_LEAGUES[id]) return null;
     const meta = LEAGUES[id]; if(!meta) return null;
     try{
       const d = await _proxyJson('/proxy/tencent/league?league='+encodeURIComponent(id));
-      if(!d.standings.length && !d.schedule.length) return null;
-      return { meta, detail:{ standings:d.standings, schedule:d.schedule, rankings:{}, bracket:null } };
+      const rk = d.rankings || {};
+      const hasRk = Object.keys(rk).some(k=>(rk[k]||[]).length);
+      if(!d.standings.length && !d.schedule.length && !hasRk) return null;
+      return { meta, detail:{ standings:d.standings, schedule:d.schedule, rankings:rk, bracket:null } };
     }catch(e){ return null; }
   },
   async getGame(id){
@@ -1105,14 +1323,54 @@ const TencentAdapter = {
   }
 };
 
+/* ---------- 懂球帝适配器：足球积分榜 + 射手/助攻/射门榜（代理解析 SSR HTML） ---------- */
+const DQ_LEAGUES = { epl:1, laliga:1, seriea:1, bundes:1, csl:1, ucl:1, worldcup:1 };
+const DongqiudiAdapter = {
+  async getGames(){ return []; },
+  async getLeague(id){
+    if(!DQ_LEAGUES[id]) return null;
+    const meta = LEAGUES[id]; if(!meta) return null;
+    try{
+      const d = await _proxyJson('/proxy/dongqiudi/league?league='+encodeURIComponent(id));
+      const rk = d.rankings || {};
+      const hasRk = Object.keys(rk).some(k=>(rk[k]||[]).length);
+      if(!d.standings.length && !hasRk) return null;
+      return { meta, detail:{ standings:d.standings, schedule:d.schedule||[], rankings:rk, bracket:null } };
+    }catch(e){ return null; }
+  },
+  async getGame(){ return null; }
+};
+
+/* ---------- 直播吧适配器：NBA 东西部排行 + 得分/篮板/助攻/抢断/盖帽榜（代理转发 JSON） ---------- */
+const ZB_LEAGUES = { nba:1 };
+const Zhibo8Adapter = {
+  async getGames(){ return []; },
+  async getLeague(id){
+    if(!ZB_LEAGUES[id]) return null;
+    const meta = LEAGUES[id]; if(!meta) return null;
+    try{
+      const d = await _proxyJson('/proxy/zhibo8/league?league='+encodeURIComponent(id));
+      const rk = d.rankings || {};
+      const hasRk = Object.keys(rk).some(k=>(rk[k]||[]).length);
+      if(!d.standings.length && !hasRk) return null;
+      return { meta, detail:{ standings:d.standings, schedule:d.schedule||[], rankings:rk, bracket:null } };
+    }catch(e){ return null; }
+  },
+  async getGame(){ return null; }
+};
+
 /* ---------- 本地持久化（localStorage 不可用时退内存） ---------- */
+/* 台账站点：不再区分主源/备源，均作为可选兜底候选纳入驱动取数；账密保留，后续可自行增站。 */
 const DEFAULT_SOURCES = [
-  { id:'src-nba',  name:'NBA 官网',     url:'https://www.nba.com',            type:'free', leagueId:'nba',  role:'primary', user:'', pass:'', enabled:true,  note:'赛程 / 比分 / 积分榜公开页' },
-  { id:'src-nba-2',name:'NBA 数据分站', url:'https://www.basketball-reference.com', type:'free', leagueId:'nba', role:'backup', user:'', pass:'', enabled:true, note:'备源：用于交叉核对比分与排名' },
-  { id:'src-epl',  name:'英超官网',     url:'https://www.premierleague.com',  type:'free', leagueId:'epl',  role:'primary', user:'', pass:'', enabled:true,  note:'公开赛程与积分' },
-  { id:'src-csl',  name:'中超官网',     url:'http://www.csl.china',           type:'free', leagueId:'csl',  role:'primary', user:'', pass:'', enabled:false, note:'待接入数据源，接入时校准解析规则' },
-  { id:'src-cba',  name:'CBA 官网（代理）', url:'https://server.cbaleague.com/home/home_schedules', type:'free', leagueId:'cba', role:'primary', user:'', pass:'', enabled:true, note:'无跨域头，经本地代理转发；赛程/比分/积分榜' },
-  { id:'src-wcba', name:'WCBA 官网（代理）', url:'https://www.cba.net.cn/datahub/cbamatch/home/todaymatches?competitionId=56', type:'free', leagueId:'wcba', role:'primary', user:'', pass:'', enabled:true, note:'无跨域头，经本地代理转发；赛程/比分/积分榜' }
+  { id:'src-nba',  name:'NBA 官网',     url:'https://www.nba.com',            type:'free', leagueId:'nba',  user:'', pass:'', enabled:true,  note:'赛程 / 比分 / 积分榜公开页' },
+  { id:'src-nba-2',name:'NBA 数据分站', url:'https://www.basketball-reference.com', type:'free', leagueId:'nba', user:'', pass:'', enabled:true, note:'用于交叉核对比分与排名' },
+  { id:'src-epl',  name:'英超官网',     url:'https://www.premierleague.com',  type:'free', leagueId:'epl',  user:'', pass:'', enabled:true,  note:'公开赛程与积分' },
+  { id:'src-csl',  name:'中超官网',     url:'http://www.csl.china',           type:'free', leagueId:'csl',  user:'', pass:'', enabled:false, note:'待接入数据源，接入时校准解析规则' },
+  { id:'src-cba',  name:'CBA 官网（代理）', url:'https://server.cbaleague.com/home/home_schedules', type:'free', leagueId:'cba', user:'', pass:'', enabled:true, note:'无跨域头，经本地代理转发；赛程/比分/积分榜' },
+  { id:'src-wcba', name:'WCBA 官网（代理）', url:'https://www.cba.net.cn/datahub/cbamatch/home/todaymatches?competitionId=56', type:'free', leagueId:'wcba', user:'', pass:'', enabled:true, note:'无跨域头，经本地代理转发；赛程/比分/积分榜' },
+  { id:'src-dqd',  name:'懂球帝',   url:'https://www.dongqiudi.com/',   type:'free', leagueId:'epl', user:'', pass:'', enabled:true,  note:'足球积分榜/射手/助攻/射门榜，经本地代理解析，与腾讯交叉互补' },
+  { id:'src-zb8',  name:'直播吧',   url:'https://www.zhibo8.com/',     type:'free', leagueId:'nba',  user:'', pass:'', enabled:true,  note:'NBA 东西部排行与球员榜，经本地代理转发，与 ESPN/腾讯交叉互补' },
+  { id:'src-hupu', name:'虎扑',     url:'https://www.hupu.com/',       type:'free', leagueId:'nba',  user:'', pass:'', enabled:false, note:'PC 端为 SPA、App 接口需签名鉴权，暂作参考源预留适配器位' }
 ];
 const Store = (() => {
   const PREFIX = 'shub:';
@@ -1127,10 +1385,12 @@ const Store = (() => {
   return {
     get follows(){ return read('follows', []); },   set follows(v){ write('follows', v); },
     get history(){ return read('history', []); },   set history(v){ write('history', v); },
-    get settings(){ return Object.assign({ pollInterval:30, cacheTtl:1800, cacheMaxGb:1, uiLang:'zh-CN', nameLang:'zh', lite:false, theme:'default', customBg:'#2A1B4A', themeHistory:[], proxyBase:'http://127.0.0.1:8787' }, read('settings', {})); },
+    get settings(){ return Object.assign({ pollInterval:30, cacheTtl:600, cacheMaxGb:1, uiLang:'zh-CN', nameLang:'zh', lite:false, theme:'default', customBg:'#2A1B4A', themeHistory:[], proxyBase:'http://127.0.0.1:8787', sourcePrefs:{} }, read('settings', {})); },
     set settings(v){ write('settings', v); },
     get sources(){ const s = read('sources', null); return Array.isArray(s) && s.length ? s : DEFAULT_SOURCES.slice(); },
     set sources(v){ write('sources', v); },
+    get predict(){ return read('predict', {}); },   set predict(v){ write('predict', v); },
+    get predictRef(){ return read('predictRef', {}); }, set predictRef(v){ write('predictRef', v); },
     get cache(){ return read('cache', {}); },        set cache(v){ write('cache', v); },
     clearCache(){ write('cache', {}); }
   };
@@ -1150,26 +1410,40 @@ function fmtSize(b){
   if (b >= 1024) return (b/1024).toFixed(1)+' KB';
   return b+' B';
 }
+const memCache = {};
 function cacheGet(key){
+  const hit = memCache[key];
+  if (hit){
+    if (Date.now() - hit.ts > Store.settings.cacheTtl * 1000){ delete memCache[key]; }
+    else return hit.v;
+  }
   const c = Store.cache, e = c[key];
   if (!e) return null;
   if (Date.now() - e.ts > Store.settings.cacheTtl * 1000){ delete c[key]; Store.cache = c; return null; }
+  memCache[key] = e;
   return e.v;
 }
 function cacheSet(key, v){
   const c = Store.cache, max = (Store.settings.cacheMaxGb||1)*1024*1024*1024;
-  c[key] = { v, ts: Date.now() };
+  const entry = { v, ts: Date.now() };
+  c[key] = entry; memCache[key] = entry;
   let total = cacheBytes();
   if (total > max){
     const keys = Object.keys(c).sort((a,b)=>c[a].ts - c[b].ts);
     for (const k of keys){
       if (total <= max) break;
-      total -= entrySize(c[k].v); delete c[k];
+      total -= entrySize(c[k].v); delete c[k]; delete memCache[k];
     }
   }
   Store.cache = c;
 }
 function cacheSize(){ return cacheBytes(); }
+/* 一次性迁移：旧版按筛选条件切碎的 games 缓存键合并为 games:all，清理残留 */
+(function(){
+  const c=Store.cache; let dirty=false;
+  Object.keys(c).forEach(k=>{ if(k.indexOf('games:')===0 && k!=='games:all'){ delete c[k]; dirty=true; } });
+  if(dirty) Store.cache=c;
+})();
 /* 每 30 分钟扫描一次过期缓存条目 */
 setInterval(()=>{
   const c = Store.cache, ttl = Store.settings.cacheTtl*1000; let dirty = false;
@@ -1177,42 +1451,128 @@ setInterval(()=>{
   if (dirty) Store.cache = c;
 }, 30*60*1000);
 
+/* ---------- 数据源适配器注册表 + 按联赛主源/兜底顺序 ---------- */
+const SOURCE_ADAPTERS = { espn: EspnAdapter, proxy: ProxyAdapter, tencent: TencentAdapter, dongqiudi: DongqiudiAdapter, zhibo8: Zhibo8Adapter };
+const SOURCE_LABEL = { espn:'ESPN', proxy:'本地代理', tencent:'腾讯体育', dongqiudi:'懂球帝', zhibo8:'直播吧' };
+/* 仅由腾讯补球员榜、赛程/比分仍走其他源的联赛（不参与腾讯赛程优先判定） */
+const TENCENT_RANK_ONLY = { nba:1 };
+function defaultSourceOrder(lid){
+  if (TENCENT_RANK_ONLY[lid] || ZB_LEAGUES[lid]) return ['espn','proxy','tencent','zhibo8'];
+  if (DQ_LEAGUES[lid]) return ['tencent','espn','proxy','dongqiudi'];
+  if (PROXY_LEAGUES[lid])   return ['proxy','espn','tencent'];
+  return ['espn','proxy','tencent','dongqiudi','zhibo8'];
+}
+/* 主源优先，其后为勾选的兜底源；未配置时回退默认顺序。兜底即原「备源」概念，合并于此。 */
+function sourceOrder(lid){
+  const prefs = (Store.settings.sourcePrefs||{})[lid];
+  if (prefs && prefs.primary && SOURCE_ADAPTERS[prefs.primary]){
+    const fb = (prefs.fallbacks||[]).filter(x=>x!==prefs.primary && SOURCE_ADAPTERS[x]);
+    return [prefs.primary, ...fb, ...defaultSourceOrder(lid)].filter((v,i,a)=>a.indexOf(v)===i);
+  }
+  return defaultSourceOrder(lid);
+}
+
 /* ---------- 带缓存的数据源出口（手动刷新 force 绕过缓存；底层为真实公开源 Adapter） ---------- */
 const CachedProvider = {
+  _refreshing:false,
+  async _fetchAllGames(){
+    const [es,pr]=await Promise.allSettled([
+      EspnAdapter.getGames({}), ProxyAdapter.getGames({})
+    ]);
+    return this._mergeById(es.value||[], pr.value||[]);
+  },
+  /* 多组赛程按 id 去重合并（保留先出现的一条） */
+  _mergeById(...groups){
+    const seen=new Set(); const out=[];
+    groups.flat().forEach(g=>{ if(g&&g.id&&!seen.has(g.id)){ seen.add(g.id); out.push(g); } });
+    return out;
+  },
+  async _refreshGames(){
+    if(this._refreshing) return;
+    this._refreshing = true;
+    try{ const list=await this._fetchAllGames(); if(list.length) cacheSet('games:all', list); }
+    catch(e){}
+    finally{ this._refreshing=false; }
+  },
   async getGames(opts={}){
-    const key = 'games:' + JSON.stringify(opts);
-    if (!opts.force){ const hit = cacheGet(key); if (hit) return hit.map(localizeGame); }
-    let list = [];
-    try{ list = await EspnAdapter.getGames(opts); }catch(e){ list = []; }
-    /* ESPN 未覆盖的国内联赛（WCBA）回退本地/云端代理源 */
-    try{ list = list.concat(await ProxyAdapter.getGames(opts)); }catch(e){}
-    /* 腾讯体育源：CBA、五大联赛/欧冠/日职联、WTA/ATP/大满贯等 */
-    try{ list = list.concat(await TencentAdapter.getGames(opts)); }catch(e){}
-    list = filterGames(list, opts);
-    /* 空结果（网络未就绪/无源）不写缓存，避免偶发空态被长期复用 */
-    if (list.length) cacheSet(key, list);
-    return list.map(localizeGame);
+    const GKEY='games:all';
+    if(!opts.force){
+      const hit=cacheGet(GKEY);
+      if(hit){
+        const e=Store.cache[GKEY];
+        const age=Date.now()-(e?e.ts:0);
+        if(age > Store.settings.cacheTtl*1000*0.5) this._refreshGames().catch(()=>{});
+        return filterGames(hit, opts).map(localizeGame);
+      }
+    }
+    /* 冷启动：快源（代理 + 腾讯）并发先返回首屏；ESPN 慢源后台到达后按 id 合并回填缓存，不阻塞首屏 */
+    const espnP = EspnAdapter.getGames({}).catch(()=>[]);
+    const fast = await Promise.allSettled([ProxyAdapter.getGames({})]);
+    const list = this._mergeById(...fast.map(r=>r.value||[]));
+    espnP.then(es=>{
+      const prev = cacheGet(GKEY) || [];
+      const merged = this._mergeById(prev, list, es||[]);
+      if(merged.length) cacheSet(GKEY, merged);
+    }).catch(()=>{});
+    if(list.length) cacheSet(GKEY, list);
+    return filterGames(list, opts).map(localizeGame);
   },
   async getLeague(id, opts={}){
     const key = 'league:' + id;
     if (!opts.force){ const hit = cacheGet(key); if (hit) return localizeLeague(hit); }
-    let data = null;
-    try{ data = await EspnAdapter.getLeague(id); }catch(e){ data = null; }
-    if (!data){ try{ data = await ProxyAdapter.getLeague(id); }catch(e){ data = null; } }
-    if (!data){ try{ data = await TencentAdapter.getLeague(id); }catch(e){ data = null; } }
-    if (data) cacheSet(key, data);
+    const order = sourceOrder(id);
+    let data = null; const extras = [];
+    /* 按主源 → 兜底顺序取首个完整对象；其余源作为补充，回填主源缺失/为空的球员榜。 */
+    for (const src of order){
+      let d = null;
+      try{ d = await SOURCE_ADAPTERS[src].getLeague(id); }catch(e){ d = null; }
+      if (!d) continue;
+      if (!data) data = d; else extras.push(d);
+    }
+    if (data){
+      const base = data.detail || {};
+      base.rankings = base.rankings || {};
+      extras.forEach(x => {
+        const xt = x.detail || {};
+        /* 积分榜：主源整表缺失时整表回填；主源已有数据时，按球队名做字段级补缺（如足球平场 draw） */
+        if ((!base.standings || !base.standings.length) && xt.standings && xt.standings.length) {
+          base.standings = xt.standings;
+        } else if (xt.standings && xt.standings.length) {
+          const em = {};
+          xt.standings.forEach(t => { em[t.name] = t; });
+          (base.standings || []).forEach(t => {
+            const e = em[t.name]; if (!e) return;
+            ['draw', 'win', 'lose', 'pct', 'streak'].forEach(k => {
+              const empty = t[k] == null || t[k] === '' || t[k] === '—';
+              if (empty && e[k] != null && e[k] !== '') t[k] = e[k];
+            });
+          });
+        }
+        if ((!base.schedule || !base.schedule.length) && xt.schedule && xt.schedule.length) base.schedule = xt.schedule;
+        const r = xt.rankings || {};
+        Object.keys(r).forEach(k => { if ((!base.rankings[k] || !base.rankings[k].length) && r[k].length) base.rankings[k] = r[k]; });
+      });
+      data.detail = base;
+      cacheSet(key, data);
+    }
     return localizeLeague(data);
   },
   async getGame(id, opts={}){
     const key = 'game:' + id;
     if (!opts.force){ const hit = cacheGet(key); if (hit) return localizeGame(hit); }
     let g = null;
-    try{
-      if(String(id).startsWith('espn-')) g = await EspnAdapter.getGame(id);
-      else if(String(id).startsWith('tx-')) g = await TencentAdapter.getGame(id);
-      else g = await ProxyAdapter.getGame(id);
-    }catch(e){ g = null; }
-    if (g) cacheSet(key, g);
+    const pref = String(id).startsWith('espn-') ? 'espn' : String(id).startsWith('tx-') ? 'tencent' : 'proxy';
+    const order = [pref, ...['espn','proxy','tencent'].filter(x=>x!==pref)];
+    for (const src of order){
+      try{ g = await SOURCE_ADAPTERS[src].getGame(id); }catch(e){ g = null; }
+      if (g) break;
+    }
+    if (g){
+      /* 单场缓存路径同样按北京时间归入今天/明天/后天桶；原始日期串回填 dateRaw */
+      if(g.dateRaw==null && g.dateKey) g.dateRaw=g.dateKey;
+      if(g.dateKey && !['today','tomorrow','day3'].includes(g.dateKey)) g.dateKey=_bucketFromBj(g.dateKey,g.localTime);
+      cacheSet(key, g);
+    }
     return localizeGame(g);
   }
 };
@@ -1234,13 +1594,14 @@ const state = {
   rankTab: 'pts',          // pts | ast | reb
   playerTab: {},           // 全局球员榜：{leagueId: 子榜 k}
   statSort: { k:null, dir:'desc' },  // 技术统计表头排序
+  standSort: { k:'rank', dir:'asc' }, // 积分榜表头排序
+  rankSort: { k:null, dir:'desc' },  // 球员榜指标排序
 };
 
 const DATE_OPTS = [
   { id:'today',    label:'今天' },
   { id:'tomorrow', label:'明天' },
   { id:'day3',    label:'后天' },
-  { id:'all',      label:'近3天' },
 ];
 
 /* 广告位配置：link 为空时占位；后续填入落地页链接 / 素材图即可挂载广告 */
@@ -1288,35 +1649,38 @@ function t(key, vars){
 const I18N = {
 'zh-CN': {
  'app.title':'赛事','app.titleGlow':'中心',
- 'nav.home':'首页','nav.rank':'积分榜','nav.players':'球员榜','nav.schedule':'赛程','nav.me':'我的',
+ 'nav.home':'赛事中心','nav.rank':'赛事排名','nav.players':'球员数据','nav.schedule':'赛事日程','nav.me':'我的',
  'sport.all':'全部',
  'date.today':'今天','date.tomorrow':'明天','date.day3':'后天','date.all':'近3天',
  'date.meta':'{y}年{m}月{d}日 · 北京时间(UTC+8)',
  'sort.time':'按时间','sort.timeDesc':'从新到旧','sort.timeAsc':'从旧到新','sort.category':'按联赛分组','sort.status':'按比赛状态','sort.label':'排序：',
  'filter.allCountry':'全部国家/地区','filter.allTier':'全部级别','filter.allProject':'全部项目',
  'refresh':'刷新',
- 'status.done':'完场','status.upcoming':'未开赛',
- 'table.rank':'排名','table.team':'球队','table.win':'胜','table.lose':'负','table.pct':'胜率','table.form':'近况',
- 'table.date':'日期','table.match':'对阵','table.score':'比分','table.status':'状态','table.player':'球员',
+ 'status.live':'进行中','status.done':'完场','status.upcoming':'未开赛',
+ 'table.rank':'排名','table.team':'球队','table.win':'胜','table.lose':'负','table.pct':'胜率','table.form':'近况','table.draw':'平','table.points':'积分','table.prize':'奖金',
+ 'table.date':'日期','table.match':'对阵','table.score':'比分','table.status':'状态','table.player':'球员','table.venue':'比赛地',
  'tab.standings':'积分榜','tab.schedule':'赛程表','tab.rankings':'球员排名','tab.playoffs':'季后赛','tab.knockout':'淘汰赛',
  'league.back':'← 返回赛事列表','league.noData':'联赛数据待接入',
  'detail.flow':'回合动作流','detail.form':'球队近况与战绩','detail.stats':'实时技术统计','detail.tennisRank':'选手排名与积分',
+ 'detail.predict':'赛事预测','predict.chance':'胜率参考','predict.homeWin':'主队胜','predict.awayWin':'客队胜','predict.run':'预测','predict.reset':'重置预测','predict.manual':'已手动调整','predict.base':'基于战绩、排名、近况与主场推演，仅供参考',
  'detail.info':'赛事信息','detail.status':'状态','detail.date':'日期','detail.localTime':'当地时间','detail.beijing':'北京时间(+8)','detail.result':'结果',
  'detail.rosterNote':'名单由数据源提供，未开赛或无数据时为空',
  'roster.starters':'首发（{n}）','roster.subs':'替补（{n}）','roster.coach':'教练组','roster.headCoach':'主教练','roster.assistantCoach':'助理教练',
- 'team.record':'赛季战绩','team.rank':'排名 / 积分','team.last5':'近5场',
+ 'team.record':'赛季战绩','team.rank':'排名 / 积分','team.last5':'近5场','team.home':'主队','team.away':'客队',
  'flow.emptyUpcoming':'比赛未开始，回合动作将在开赛后更新','flow.emptyDone':'本场暂无回合动作记录','flow.emptyLive':'暂无回合动作数据，实时更新中','flow.count':'{n} 条','flow.more':'查看更早 {n} 条','flow.less':'收起更早记录',
  'court.all':'全场','court.shotStat':'命中 {made} · 未中 {miss}',
- 'rank.title':'积分榜汇总','rank.sub':'各联赛实时排行（公开数据源）','rank.empty':'暂无已接入积分榜的联赛','rank.emptyTip':'当前筛选下暂无积分榜，联赛数据待接入数据源',
+ 'rank.title':'积分榜汇总','rank.sub':'各联赛实时排行（公开数据源）','rank.empty':'暂无已接入积分榜的联赛','rank.emptyTip':'当前筛选下暂无积分榜，联赛数据待接入数据源','rank.more':'更多指标',
  'schedule.title':'赛程汇总','schedule.sub':'各联赛近期赛程与结果（公开数据源）','schedule.empty':'暂无已接入赛程的联赛','schedule.emptyTip':'当前筛选下暂无赛程，联赛数据待接入数据源',
  'players.title':'球员榜汇总','players.sub':'各赛事球员个人记录（公开数据源）','players.empty':'暂无球员记录榜，联赛数据待接入数据源','players.emptyTip':'暂无球员榜，接入数据源后按赛事展示个人记录',
  'me.title':'我的','me.guest':'访客模式','me.guestSub':'关注与历史保存在本机；账号同步功能预留中','me.avatar':'客',
  'me.follows':'我的关注（{n}）','me.history':'浏览历史（{n}）','me.clear':'清空',
  'me.pref':'偏好与数据','me.settings':'设置与数据源','me.settingsSub':'刷新间隔 · 缓存 · 采集网站',
  'me.cache':'本地缓存','me.cacheSub':'已用 {size} · 每 30 分钟自动清理过期项','me.cacheClear':'清理',
- 'me.about':'关于','me.aboutSub':'版本 0.1.0 · 赛事数据来自公开数据源，暂未接入的项目显示为空态',
+ 'me.about':'关于','me.aboutSub':'版本 0.2.0 · 赛事数据来自公开数据源，暂未接入的项目显示为空态',
  'me.view':'查看','me.unfollow':'取关','me.open':'打开',
  'me.fLeague':'联赛','me.fTeam':'球队','me.fPlayer':'选手','me.hGame':'比赛','me.hLeague':'联赛',
+ 'me.fTeams':'关注球队/选手（{n}）','me.fGames':'关注赛程（{n}）',
+ 'me.emptyFollowTeams':'还没有关注球队或选手，去比赛详情页点星标关注','me.emptyFollowGames':'关注球队后，其未开赛场次会自动出现在这里',
  'me.emptyFollow':'还没有关注内容，去联赛页点星标关注','me.emptyHistory':'暂无浏览历史',
  'settings.title':'设置','settings.general':'通用','settings.tabGeneral':'通用设置','settings.tabSources':'数据源网站','settings.uiLang':'界面语言','settings.nameLang':'球队 / 球员名称',
  'settings.nameLangHint':'仅切换名字，不改动界面文案','settings.lite':'省流量模式','settings.liteHint':'关闭非必要图片与动效（手机端优先）',
@@ -1326,14 +1690,17 @@ const I18N = {
  'settings.theme':'背景配色','settings.themeHint':'固定三套主题，或自定义背景色；下拉框自动使用对比色。',
  'settings.themeDefault':'默认','settings.themeLight':'亮色（白色）','settings.themeDark':'暗色（黑色）','settings.themeCustom':'自定义',
  'settings.recommend':'推荐配色','settings.history':'曾用配色（最近 5 个）',
- 'settings.sourcesHint':'以公开免费站点为主；同一赛事可配主源 + 备源做交叉核验。账号密码仅保存在本机，不上传。付费源预留登录配置。',
+ 'settings.sourcesHint':'以公开免费站点为主；台账站点不再区分主源 / 备源，均可在下方按联赛选为兜底候选。账号密码仅保存在本机，不上传。付费源预留登录配置。',
  'settings.addSource':'+ 添加网站',
+ 'settings.prefTitle':'按联赛数据源（主源 / 兜底）',
+ 'settings.prefHint':'主源优先取数；主源失败时按勾选的兜底源依次尝试。台账中已启用的站点一并出现在候选列表；选「自动」则使用默认顺序。',
+ 'settings.prefAuto':'自动（默认）','settings.prefReset':'恢复默认顺序','settings.prefFallback':'兜底',
  'src.name':'数据源名称','src.free':'免费','src.paid':'付费','src.delete':'删除','src.save':'保存','src.discard':'放弃修改','src.saved':'数据源已保存','src.url':'网址，如 https://www.nba.com',
  'src.leagueAll':'通用（全赛事）','src.primary':'主源','src.backup':'备源','src.user':'账号（可选）','src.pass':'密码（可选·本机保存）',
  'toast.updated':'已更新','toast.followed':'已关注','toast.unfollowed':'已取消关注','toast.historyCleared':'历史已清空',
  'toast.cacheCleared':'缓存已清理','toast.sourceDeleted':'已删除数据源','toast.demo':'该模块待接入数据源',
- 'stat.min':'时间','stat.pts':'得分','stat.ast':'助攻','stat.reb':'篮板','stat.stl':'抢断','stat.blk':'盖帽',
- 'flow.res.made':'命中','flow.res.miss':'未中','flow.res.assist':'助攻','flow.res.steal':'抢断','flow.res.rebound':'篮板','flow.res.foul':'犯规','flow.res.sub':'换人','flow.res.timeout':'暂停','flow.res.turnover':'失误','flow.res.block':'盖帽','flow.res.violation':'违例',
+ 'stat.min':'时间','stat.value':'数值','stat.pts':'得分','stat.ast':'助攻','stat.reb':'篮板','stat.stl':'抢断','stat.blk':'盖帽','stat.tov':'失误','stat.eff':'效率',
+ 'flow.res.made':'命中','flow.res.miss':'未中','flow.res.assist':'助攻','flow.res.steal':'抢断','flow.res.rebound':'篮板','flow.res.foul':'犯规','flow.res.sub':'换人','flow.res.timeout':'暂停','flow.res.turnover':'失误','flow.res.block':'盖帽','flow.res.violation':'违例','flow.res.other':'事件',
  'stat.goals':'进球','stat.assists':'助攻','stat.shots':'射门','stat.sot':'射正','stat.sv':'扑救',
  'stat.break':'单杆','stat.pots':'进球','stat.frames':'局分','stat.remain':'剩余球','stat.rate':'成功率',
  'stat.kda':'KDA','stat.gold':'经济','stat.cs':'补刀','stat.tower':'塔','stat.obj':'中立目标','stat.part':'参团率',
@@ -1347,10 +1714,10 @@ const I18N = {
 },
 'zh-TW': {
  'app.title':'賽事','app.titleGlow':'中心',
- 'nav.home':'首頁',
- 'nav.rank':'積分榜',
- 'nav.players':'球員榜',
- 'nav.schedule':'賽程',
+ 'nav.home':'賽事中心',
+ 'nav.rank':'賽事排名',
+ 'nav.players':'球員數據',
+ 'nav.schedule':'賽事日程',
  'nav.me':'我的',
  'sport.all':'全部',
  'date.today':'今天',
@@ -1366,6 +1733,7 @@ const I18N = {
  'filter.allTier':'全部級別',
  'filter.allProject':'全部項目',
  'refresh':'刷新',
+ 'status.live':'進行中',
  'status.done':'完場',
  'status.upcoming':'未開賽',
  'table.rank':'排名',
@@ -1373,11 +1741,12 @@ const I18N = {
  'table.win':'勝',
  'table.lose':'負',
  'table.pct':'勝率',
- 'table.form':'近況',
+ 'table.form':'近況','table.draw':'平','table.points':'積分','table.prize':'獎金',
  'table.date':'日期',
  'table.match':'對陣',
  'table.score':'比分',
  'table.status':'狀態',
+ 'table.venue':'比賽地',
  'table.player':'球員',
  'tab.standings':'積分榜',
  'tab.schedule':'賽程表',
@@ -1402,7 +1771,7 @@ const I18N = {
  'roster.coach':'教練組',
  'roster.headCoach':'主教練',
  'roster.assistantCoach':'助理教練',
- 'team.record':'賽季戰績',
+ 'team.record':'賽季戰績','team.home':'主隊','team.away':'客隊',
  'team.rank':'排名 / 積分',
  'team.last5':'近5場',
  'flow.emptyUpcoming':'比賽未開始，回合動作將在開賽後更新',
@@ -1413,7 +1782,7 @@ const I18N = {
  'rank.title':'積分榜彙總',
  'rank.sub':'各聯賽實時排行（公開數據源）',
  'rank.empty':'暫無已接入積分榜的聯賽',
- 'rank.emptyTip':'當前篩選下暫無積分榜，聯賽數據待接入數據源',
+ 'rank.emptyTip':'當前篩選下暫無積分榜，聯賽數據待接入數據源','rank.more':'更多指標',
  'schedule.title':'賽程彙總',
  'schedule.sub':'各聯賽近期賽程與結果（公開數據源）',
  'schedule.empty':'暫無已接入賽程的聯賽',
@@ -1436,7 +1805,7 @@ const I18N = {
  'me.cacheSub':'已用 {size} · 每 30 分鐘自動清理過期項',
  'me.cacheClear':'清理',
  'me.about':'關於',
- 'me.aboutSub':'版本 0.1.0 · 賽事數據來自公開數據源，暫未接入的項目顯示為空態',
+ 'me.aboutSub':'版本 0.2.0 · 賽事數據來自公開數據源，暫未接入的項目顯示為空態',
  'me.view':'查看',
  'me.unfollow':'取關',
  'me.open':'打開',
@@ -1465,7 +1834,7 @@ const I18N = {
  'settings.theme':'背景配色','settings.themeHint':'固定三套主題，或自訂背景色；下拉框自動使用對比色。',
  'settings.themeDefault':'預設','settings.themeLight':'亮色（白色）','settings.themeDark':'暗色（黑色）','settings.themeCustom':'自訂',
  'settings.recommend':'推薦配色','settings.history':'曾用配色（最近 5 個）',
- 'settings.sourcesHint':'以公開免費站點爲主；同一賽事可配主源 + 備源做交叉覈驗。賬號密碼僅保存在本機，不上傳。付費源預留登錄配置。',
+ 'settings.sourcesHint':'以公開免費站點爲主；臺賬站點不再區分主源 / 備源，均可在下方按聯賽選爲兜底候選。賬號密碼僅保存在本機，不上傳。付費源預留登錄配置。',
  'settings.addSource':'+ 添加網站',
  'src.name':'數據源名稱',
  'src.free':'免費',
@@ -1486,11 +1855,14 @@ const I18N = {
  'toast.sourceDeleted':'已刪除數據源',
  'toast.demo':'該模塊待接入數據源',
  'stat.min':'時間',
+ 'stat.value':'數值',
  'stat.pts':'得分',
  'stat.ast':'助攻',
  'stat.reb':'籃板',
  'stat.stl':'搶斷',
  'stat.blk':'蓋帽',
+ 'stat.tov':'失誤',
+ 'stat.eff':'效率',
  'stat.goals':'進球',
  'stat.assists':'助攻',
  'stat.shots':'射門',
@@ -1543,28 +1915,31 @@ const I18N = {
  'sort.time':'By time','sort.timeDesc':'Newest first','sort.timeAsc':'Oldest first','sort.category':'By league','sort.status':'By status','sort.label':'Sort: ',
  'filter.allCountry':'All countries/regions','filter.allTier':'All tiers','filter.allProject':'All events',
  'refresh':'Refresh',
- 'status.done':'Final','status.upcoming':'Upcoming',
- 'table.rank':'Rank','table.team':'Team','table.win':'W','table.lose':'L','table.pct':'Win%','table.form':'Form',
- 'table.date':'Date','table.match':'Match','table.score':'Score','table.status':'Status','table.player':'Player',
+ 'status.live':'Live','status.done':'Final','status.upcoming':'Upcoming',
+ 'table.rank':'Rank','table.team':'Team','table.win':'W','table.lose':'L','table.pct':'Win%','table.form':'Form','table.draw':'D','table.points':'Pts','table.prize':'Prize',
+ 'table.date':'Date','table.match':'Match','table.score':'Score','table.status':'Status','table.player':'Player','table.venue':'Venue',
  'tab.standings':'Standings','tab.schedule':'Fixtures','tab.rankings':'Player Rankings','tab.playoffs':'Playoffs','tab.knockout':'Knockout',
  'league.back':'← Back to events','league.noData':'League data pending',
  'detail.flow':'Play-by-play','detail.form':'Recent form','detail.stats':'Live Stats','detail.tennisRank':'Rank & Points',
+ 'detail.predict':'Match Prediction','predict.chance':'Win probability','predict.homeWin':'Home','predict.awayWin':'Away','predict.run':'Predict','predict.reset':'Reset','predict.manual':'Manually adjusted','predict.base':'Estimated from record, rank, recent form & home advantage, for reference only',
  'detail.info':'Match Info','detail.status':'Status','detail.date':'Date','detail.localTime':'Local time','detail.beijing':'Beijing (+8)','detail.result':'Result',
  'detail.rosterNote':'Roster comes from the data source; empty before kickoff or when unavailable',
  'roster.starters':'Starters ({n})','roster.subs':'Subs ({n})','roster.coach':'Coaching staff','roster.headCoach':'Head coach','roster.assistantCoach':'Assistant coach',
- 'team.record':'Season record','team.rank':'Rank / Pts','team.last5':'Last 5',
+ 'team.record':'Season record','team.rank':'Rank / Pts','team.last5':'Last 5','team.home':'Home','team.away':'Away',
  'flow.emptyUpcoming':'Match not started; play-by-play updates after kickoff','flow.emptyDone':'No play-by-play for this match','flow.emptyLive':'No play-by-play yet, updating live','flow.count':'{n} items','flow.more':'Show earlier {n}','flow.less':'Hide earlier',
  'court.all':'Full game','court.shotStat':'Made {made} · Missed {miss}',
- 'rank.title':'Standings Overview','rank.sub':'Live rankings by league (public source)','rank.empty':'No league with standings yet','rank.emptyTip':'No standings under current filters; pending data source',
+ 'rank.title':'Standings Overview','rank.sub':'Live rankings by league (public source)','rank.empty':'No league with standings yet','rank.emptyTip':'No standings under current filters; pending data source','rank.more':'More stats',
  'schedule.title':'Schedule Overview','schedule.sub':'Recent fixtures & results (public source)','schedule.empty':'No league with fixtures yet','schedule.emptyTip':'No fixtures under current filters; pending data source',
  'players.title':'Player Rankings Overview','players.sub':'Player records by event (public source)','players.empty':'No player records under current filters; pending data source','players.emptyTip':'No player rankings yet; shown after data source connects',
  'me.title':'Me','me.guest':'Guest mode','me.guestSub':'Follows & history stored locally; account sync reserved','me.avatar':'G',
  'me.follows':'Following ({n})','me.history':'History ({n})','me.clear':'Clear',
  'me.pref':'Preferences & Data','me.settings':'Settings & Sources','me.settingsSub':'Refresh interval · Cache · Sources',
  'me.cache':'Local cache','me.cacheSub':'Used {size} · expired items cleared every 30 min','me.cacheClear':'Clear',
- 'me.about':'About','me.aboutSub':'Version 0.1.0 · match data comes from public sources; uncovered events show an empty state',
+ 'me.about':'About','me.aboutSub':'Version 0.2.0 · match data comes from public sources; uncovered events show an empty state',
  'me.view':'View','me.unfollow':'Unfollow','me.open':'Open',
  'me.fLeague':'League','me.fTeam':'Team','me.fPlayer':'Player','me.hGame':'Match','me.hLeague':'League',
+ 'me.fTeams':'Teams / Players ({n})','me.fGames':'Followed Fixtures ({n})',
+ 'me.emptyFollowTeams':'No team or player followed yet; star one on the match detail page','me.emptyFollowGames':'Upcoming fixtures of followed teams appear here automatically',
  'me.emptyFollow':'No follows yet; star a league to follow','me.emptyHistory':'No browsing history',
  'settings.title':'Settings','settings.general':'General','settings.tabGeneral':'General','settings.tabSources':'Data sources','settings.uiLang':'Interface language','settings.nameLang':'Team / player names',
  'settings.nameLangHint':'Switches names only, not interface text','settings.lite':'Data saver','settings.liteHint':'Disable non-essential images & animations (mobile-first)',
@@ -1574,14 +1949,17 @@ const I18N = {
  'settings.theme':'Background theme','settings.themeHint':'Three fixed themes or a custom color; selects auto use the contrast color.',
  'settings.themeDefault':'Default','settings.themeLight':'Light (white)','settings.themeDark':'Dark (black)','settings.themeCustom':'Custom',
  'settings.recommend':'Recommended','settings.history':'Recent colors (last 5)',
- 'settings.sourcesHint':'Public free sites first; primary + backup sources can cross-check. Credentials stored locally only, not uploaded. Paid-source login reserved.',
+ 'settings.sourcesHint':'Public free sites first; ledger sites are no longer split into primary/backup and can all be picked as fallbacks per league. Credentials stored locally only, not uploaded. Paid-source login reserved.',
  'settings.addSource':'+ Add site',
+ 'settings.prefTitle':'Per-league source (primary / fallback)',
+ 'settings.prefHint':'Primary source is tried first; on failure the checked fallbacks are tried in order. Enabled ledger sites also appear in the candidate list. Choose Auto to use the default order.',
+ 'settings.prefAuto':'Auto (default)','settings.prefReset':'Reset to default order','settings.prefFallback':'Fallback',
  'src.name':'Source name','src.free':'Free','src.paid':'Paid','src.delete':'Delete','src.save':'Save','src.discard':'Discard','src.saved':'Sources saved','src.url':'URL, e.g. https://www.nba.com',
  'src.leagueAll':'General (all events)','src.primary':'Primary','src.backup':'Backup','src.user':'Account (optional)','src.pass':'Password (optional · local)',
  'toast.updated':'Updated','toast.followed':'Followed','toast.unfollowed':'Unfollowed','toast.historyCleared':'History cleared',
  'toast.cacheCleared':'Cache cleared','toast.sourceDeleted':'Source removed','toast.demo':'This module is pending data-source integration',
- 'stat.min':'MP','stat.pts':'Points','stat.ast':'Assists','stat.reb':'Rebounds','stat.stl':'Steals','stat.blk':'Blocks',
- 'flow.res.made':'Made','flow.res.miss':'Miss','flow.res.assist':'Assist','flow.res.steal':'Steal','flow.res.rebound':'Rebound','flow.res.foul':'Foul','flow.res.sub':'Sub','flow.res.timeout':'Timeout','flow.res.turnover':'TO','flow.res.block':'Block','flow.res.violation':'Viol.',
+ 'stat.min':'MP','stat.value':'Value','stat.pts':'Points','stat.ast':'Assists','stat.reb':'Rebounds','stat.stl':'Steals','stat.blk':'Blocks','stat.tov':'TO','stat.eff':'Eff',
+ 'flow.res.made':'Made','flow.res.miss':'Miss','flow.res.assist':'Assist','flow.res.steal':'Steal','flow.res.rebound':'Rebound','flow.res.foul':'Foul','flow.res.sub':'Sub','flow.res.timeout':'Timeout','flow.res.turnover':'TO','flow.res.block':'Block','flow.res.violation':'Viol.','flow.res.other':'Play',
  'stat.goals':'Goals','stat.assists':'Assists','stat.shots':'Shots','stat.sot':'On target','stat.sv':'Saves',
  'stat.break':'Break','stat.pots':'Pots','stat.frames':'Frames','stat.remain':'Remaining','stat.rate':'Rate',
  'stat.kda':'KDA','stat.gold':'Gold','stat.cs':'CS','stat.tower':'Towers','stat.obj':'Objectives','stat.part':'Participation',
@@ -1640,13 +2018,65 @@ const NAME_ZH = {
   'Shandong Taishan':'山东泰山', 'Shanghai Port FC':'上海海港', 'Yunnan Yukun':'云南玉昆',
   'Shanghai Shenhua FC':'上海申花', 'Qingdao West Coast':'青岛西海岸', 'Zhejiang Professional FC':'浙江队',
   'Chongqing Tonglianglong':'重庆铜梁龙', 'Shenzhen Xinpengcheng':'深圳新鹏城', 'Tianjin Jinmen Tiger':'天津津门虎',
-  'Liaoning Tieren':'辽宁铁人', 'Henan':'河南队', 'Wuhan Three Towns':'武汉三镇', 'Qingdao Hainiu':'青岛海牛'
+  'Liaoning Tieren':'辽宁铁人', 'Henan':'河南队', 'Wuhan Three Towns':'武汉三镇', 'Qingdao Hainiu':'青岛海牛',
+  /* NBA / WNBA 球队（ESPN displayName → 中文） */
+  'Atlanta Hawks':'亚特兰大老鹰', 'Brooklyn Nets':'布鲁克林篮网', 'Charlotte Hornets':'夏洛特黄蜂',
+  'Chicago Bulls':'芝加哥公牛', 'Cleveland Cavaliers':'克利夫兰骑士', 'Denver Nuggets':'丹佛掘金',
+  'Detroit Pistons':'底特律活塞', 'Golden State Warriors':'金州勇士', 'Houston Rockets':'休斯顿火箭',
+  'Indiana Pacers':'印第安纳步行者', 'Los Angeles Lakers':'洛杉矶湖人', 'New Orleans Pelicans':'新奥尔良鹈鹕',
+  'Oklahoma City Thunder':'俄克拉荷马城雷霆', 'Orlando Magic':'奥兰多魔术', 'Phoenix Suns':'菲尼克斯太阳',
+  'Sacramento Kings':'萨克拉门托国王', 'Toronto Raptors':'多伦多猛龙', 'Utah Jazz':'犹他爵士',
+  'Washington Wizards':'华盛顿奇才', 'Atlanta Dream':'亚特兰大梦想', 'Golden State Valkyries':'金州女武神',
+  'Phoenix Mercury':'菲尼克斯水星', 'Seattle Storm':'西雅图风暴',
+  /* NBA 球员（ESPN displayName → 中文；未收录新秀/生僻名回退英文） */
+  'Aaron Nesmith':'阿隆·内史密斯', 'Aaron Wiggins':'阿隆·威金斯', 'Al Horford':'艾尔·霍福德',
+  'Andrew Nembhard':'安德鲁·内姆哈德', 'Anthony Black':'安东尼·布莱克', 'Brandin Podziemski':'布兰丁·波杰姆斯基',
+  'Brandon Miller':'布兰登·米勒', 'Charles Bassey':'查尔斯·巴锡', 'Coby White':'科比·怀特',
+  'Corey Kispert':'科里·基斯珀特', 'Craig Porter Jr.':'小克雷格·波特', "Day'Ron Sharpe":'戴罗恩·夏普',
+  "De'Anthony Melton":'德安东尼·梅尔顿', 'Dennis Schroder':'丹尼斯·施罗德', 'Desmond Bane':'德斯蒙德·贝恩',
+  'Donovan Mitchell':'多诺万·米切尔', 'Dorian Finney-Smith':'多里安·芬尼-史密斯', 'Dyson Daniels':'戴森·丹尼尔斯',
+  'Franz Wagner':'弗朗茨·瓦格纳', 'Gary Payton II':'加里·佩顿二世', 'Georges Niang':'乔治·尼昂',
+  'Goga Bitadze':'戈加·比塔泽', 'Gui Santos':'吉·桑托斯', 'Isaiah Stewart':'以赛亚·斯图尔特',
+  'Ivica Zubac':'伊维察·祖巴茨', 'Jalen Johnson':'贾伦·约翰逊', 'Jalen Slawson':'杰伦·斯劳森',
+  'Jalen Suggs':'杰伦·萨格斯', 'Jalen Wilson':'杰伦·威尔逊', 'James Harden':'詹姆斯·哈登',
+  'Jarace Walker':'贾雷斯·沃克', 'Jarrett Allen':'贾勒特·艾伦', 'Jay Huff':'杰伊·赫夫',
+  'Jerami Grant':'杰拉米·格兰特', 'Jevon Carter':'杰文·卡特', 'Josh Minott':'约什·米诺特',
+  'Julius Randle':'朱利叶斯·兰德尔', 'Kelly Oubre Jr.':'小凯利·乌布雷', 'Keon Ellis':'基翁·埃利斯',
+  'Kris Murray':'克里斯·穆雷', 'Larry Nance Jr.':'小拉里·南斯', 'Luguentz Dort':'吕冈茨·多尔特',
+  'Mario Hezonja':'马里奥·海佐尼亚', 'Michael Porter Jr.':'小迈克尔·波特', 'Moritz Wagner':'莫里茨·瓦格纳',
+  'Moussa Diabate':'穆萨·迪亚巴特', 'Naz Reid':'纳兹·里德', 'Nickeil Alexander-Walker':'尼克尔·亚历山大-沃克',
+  'Nikola Vucevic':'尼古拉·武切维奇', 'Noah Clowney':'诺亚·克劳尼', 'Obi Toppin':'奥比·托平',
+  'Olivier-Maxence Prosper':'奥利维耶-马克桑斯·普罗斯珀', 'Onyeka Okongwu':'奥涅卡·奥孔古',
+  'Pascal Siakam':'帕斯卡尔·西亚卡姆', 'Peyton Watson':'佩顿·沃特森', 'Quinten Post':'昆滕·波斯',
+  "Royce O'Neale":'罗伊斯·奥尼尔', 'Sam Merrill':'萨姆·梅里尔', 'T.J. McConnell':'T.J. 麦康奈尔',
+  'Taylor Hendricks':'泰勒·亨德里克斯', 'Terance Mann':'特伦斯·曼', 'Thomas Bryant':'托马斯·布莱恩特',
+  'Wendell Carter Jr.':'小温德尔·卡特',
+  /* WNBA 球员（ESPN displayName → 中文） */
+  'Allisha Gray':'阿莉莎·格雷', 'Angel Reese':'安吉尔·里斯', 'DeWanna Bonner':'德万娜·邦纳',
+  'Gabby Williams':'加比·威廉姆斯', 'Jordin Canada':'乔丹·卡纳达', 'Kiah Stokes':'凯娅·斯托克斯',
+  'Kayla Thornton':'凯拉·桑顿', 'Naz Hillmon':'纳兹·希尔蒙', 'Rhyne Howard':'莱恩·霍华德',
+  'Shatori Walker-Kimbrough':'沙托里·沃克-金布罗', 'Tiffany Hayes':'蒂凡尼·海耶斯', 'Veronica Burton':'维罗妮卡·伯顿',
+  'Cecilia Zandalasini':'塞西莉亚·赞达拉西尼', 'Sika Kone':'西卡·科内', 'Janelle Salaun':'雅内尔·萨隆',
+  'Laeticia Amihere':'莱蒂西亚·阿米赫雷', 'Kaila Charles':'凯拉·查尔斯', 'Isobel Borlase':'伊泽贝尔·博莱斯',
+  'Te-Hina Paopao':'特希娜·帕奥帕奥', 'Ashten Prechtel':'阿什滕·普雷克特尔', 'Aminata Gueye':'阿米娜塔·盖耶',
+  'Matilde Villa':'玛蒂尔德·维拉', 'Indya Nivar':'英迪亚·尼瓦尔', 'Juste Jocyte':'朱斯特·约西特',
+  'Madina Okot':'马迪娜·奥科特', 'Miela Sowah':'米埃拉·索瓦'
 };
 /* 仅切换球队 / 球员 / 教练名字；界面文案、动作描述不经过此函数 */
 function tn(name){
   if (!name) return name;
   if (Store.settings.nameLang === 'en') return NAME_EN[name] || name;
   return NAME_ZH[name] || name;
+}
+/* 中国本土联赛：球员 / 队名仅用中文，不附英文括号 */
+const CHINA_LEAGUES = { cba:1, wcba:1, csl:1 };
+function isChinaLeague(lid){ return !!(CHINA_LEAGUES[lid] || (LEAGUES[lid] && LEAGUES[lid].country==='中国')); }
+/* 非中国赛事：中文全名为主，英文名小字括号淡化；中国赛事或无英文名时仅中文 */
+function bilingualNameHtml(name, en, lid){
+  const zh = esc(name||'—');
+  const same = String(en||'').trim().toLowerCase() === String(name||'').trim().toLowerCase();
+  if (en && !isChinaLeague(lid) && !same) return `${zh} <span class="p-en">(${esc(en)})</span>`;
+  return zh;
 }
 /* 中文队名地名前缀（匹配时按长度降序，避免“广东/广州”等歧义）；拆出地名后上行省/市、下行队名剩余 */
 const CITY_PREFIX = ['长白山','上海','北京','广州','深圳','大连','成都','武汉','青岛','天津','重庆','浙江','山东','云南','辽宁','江苏','南京','宁波','福建','山西','四川','新疆','吉林','陕西','河南','湖北','湖南','安徽','广西','贵州','黑龙江','厦门','佛山','东莞','苏州','惠州','杭州','梅州','沧州','南通'];
@@ -1661,6 +2091,44 @@ function splitTeamName(name){
     }
   }
   return { city:'', rest:name };
+}
+/* 上游英文场馆城市 / 州 → 中文（键小写匹配；未收录保留原文） */
+const CITY_ZH = {
+  /* 美国篮球（NBA / WNBA / NCAA 主场城市） */
+  memphis:'孟菲斯', milwaukee:'密尔沃基', portland:'波特兰', minneapolis:'明尼阿波利斯',
+  oakland:'奥克兰', 'san francisco':'旧金山', boston:'波士顿', brooklyn:'布鲁克林',
+  'new york':'纽约', philadelphia:'费城', toronto:'多伦多', chicago:'芝加哥', detroit:'底特律',
+  cleveland:'克利夫兰', indianapolis:'印第安纳波利斯', atlanta:'亚特兰大', charlotte:'夏洛特',
+  miami:'迈阿密', orlando:'奥兰多', washington:'华盛顿', denver:'丹佛', 'salt lake city':'盐湖城',
+  phoenix:'菲尼克斯', dallas:'达拉斯', houston:'休斯顿', 'san antonio':'圣安东尼奥',
+  'new orleans':'新奥尔良', 'oklahoma city':'俄克拉荷马城', 'los angeles':'洛杉矶',
+  sacramento:'萨克拉门托', 'kansas city':'堪萨斯城', utah:'犹他',
+  'las vegas':'拉斯维加斯', 'san diego':'圣迭戈',
+  california:'加利福尼亚', texas:'得克萨斯',
+  /* 足球主要城市 */
+  london:'伦敦', manchester:'曼彻斯特', liverpool:'利物浦', madrid:'马德里',
+  barcelona:'巴塞罗那', milan:'米兰', turin:'都灵', munich:'慕尼黑', berlin:'柏林',
+  paris:'巴黎', rome:'罗马', amsterdam:'阿姆斯特丹', lisbon:'里斯本', porto:'波尔图',
+  istanbul:'伊斯坦布尔', glasgow:'格拉斯哥', seville:'塞维利亚', bilbao:'毕尔巴鄂',
+  naples:'那不勒斯', florence:'佛罗伦萨', 'london england':'伦敦'
+};
+function zhCity(c){
+  if(!c) return '';
+  const hit = CITY_ZH[String(c).trim().toLowerCase()];
+  return hit || c;
+}
+/* 比赛城市：优先上游场馆城市（中文界面中文化）；缺失时从主队名前缀拆城市（中文队名） */
+function locCity(g){
+  if(g && g.venueCity){
+    return Store.settings.nameLang === 'en' ? g.venueCity : zhCity(g.venueCity);
+  }
+  return splitTeamName((g.home&&g.home.name)||'').city || '';
+}
+/* 当地时间行：优先「城市 时间」同行；无城市回退「当地时间 时间」；无时间整项隐藏 */
+function locTimeHtml(g){
+  if(!g || !g.localTime) return '';
+  const city = locCity(g);
+  return city ? `${esc(city)} <span class="num">${esc(g.localTime)}</span>` : `${t('detail.localTime')} <span class="num">${esc(g.localTime)}</span>`;
 }
 /* 卡片队名：中文界面且能拆出地名时折两行，否则单行 */
 function teamNameHtml(name){
@@ -1770,6 +2238,8 @@ function renderNav(activeId){
   document.querySelectorAll('[data-nav]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const id = btn.dataset.nav;
+      /* 切换底部标签时重置首页筛选：一级项目回到“全部”，二级联赛不做选择；日期标签保留 */
+      state.sport = 'all'; state.league = 'all';
       if (id==='home'){ location.hash = '#/'; return; }
       if (id==='rank'){ location.hash = '#/rank'; return; }
       if (id==='players'){ location.hash = '#/players'; return; }
@@ -1796,8 +2266,8 @@ function leagueOptions(){
 function renderLeagueTabs(){
   const box = $('#league-tabs'); if (!box) return;
   const opts = leagueOptions();
-  box.innerHTML = `<button class="sub-tab ${state.league==='all'?'active':''}" data-league="all">${esc(t('sport.all'))}</button>` +
-    opts.map(l=>`<button class="sub-tab ${state.league===l.id?'active':''}" data-league="${l.id}">${esc(l.name)}</button>`).join('');
+  /* 二级标签不再设“全部”：未选择任何联赛时 state.league='all' 即展示全部赛事；标签横向滑动，不换行 */
+  box.innerHTML = opts.map(l=>`<button class="sub-tab ${state.league===l.id?'active':''}" data-league="${l.id}">${esc(l.name)}</button>`).join('');
   box.querySelectorAll('[data-league]').forEach(b=>b.addEventListener('click',()=>{
     state.league = b.dataset.league; renderHome();
   }));
@@ -1850,14 +2320,42 @@ function schedDateLabel(dateStr){
   const k = SCHED_DATE_KEY[dateStr] || dateStr;
   return dateLabel(k) || dateStr;
 }
+/* 赛程行统一「日期 时间」北京时间显示：优先 dateRaw/utc8 日期 + utc8/localTime 时间，缺省回退日期桶标签 */
+function schedBjText(s){
+  if(!s) return '—';
+  const cur=Store.settings.uiLang||'zh-CN';
+  let dateStr='';
+  const raw=String(s.dateRaw||'');
+  if(/^\d{4}-\d{2}-\d{2}/.test(raw)) dateStr=raw.slice(0,10);
+  const utc=String(s.utc8||'');
+  if(!dateStr && /^\d{4}-\d{2}-\d{2}/.test(utc)) dateStr=utc.slice(0,10);
+  const tm=String(s.localTime||'').match(/\d{1,2}:\d{2}/)||utc.match(/\d{1,2}:\d{2}/)||String(s.time||'').match(/\d{1,2}:\d{2}/);
+  const timeStr=tm?tm[0]:'';
+  if(dateStr){
+    const d=new Date(dateStr+'T00:00:00+08:00');
+    if(!isNaN(d)){ const datePart=_formatBjDate(d,cur); return timeStr?`${datePart} ${timeStr}`:datePart; }
+  }
+  const dl=schedDateLabel(s.date);
+  return timeStr?`${dl} ${timeStr}`:(dl||'—');
+}
 function statusMeta(g){
-  if (g.status==='live')   return { cls:'status-live',    text:`${esc(g.quarter)} ${esc(g.clock)}` };
+  if (g.status==='live')   return { cls:'status-live',    text:t('status.live') };
   if (g.status==='done')   return { cls:'status-done',    text:t('status.done') };
   return { cls:'status-upcoming', text:t('status.upcoming') };
 }
+/* 卡片右上角徽章：未开赛显开赛时间；进行中显节次+剩余钟；完场显完场 */
+function badgeMeta(g){
+  if (g.status==='live'){
+    const clock = [g.quarter, g.clock].filter(Boolean).join(' ').trim();
+    return { cls:'status-live', text: clock || t('status.live') };
+  }
+  if (g.status==='done') return { cls:'status-done', text:t('status.done') };
+  const tm = g.localTime || _bjTime(g.utc8||'');
+  return { cls:'status-upcoming', text: tm || t('status.upcoming') };
+}
 function gameCardHtml(g){
   const lg = LEAGUES[g.leagueId];
-  const st = statusMeta(g);
+  const st = badgeMeta(g);
   const noScore = !g.score || g.score.home==null || g.score.away==null;
   const score = (g.status==='upcoming' || noScore)
     ? `<span class="vs">VS</span>`
@@ -1885,9 +2383,7 @@ function gameCardHtml(g){
     </div>
     <div class="gc-bottom">
       <div class="gc-time">
-        <span class="gc-date num">${esc(gameDateLabel(g))}</span>
-        <span class="utc num">${t('detail.beijing')} ${esc(g.utc8)}</span>
-        ${g.localTime?`<span class="local num">${t('detail.localTime')} ${esc(g.localTime)}</span>`:''}
+        <span class="gc-date num">${esc(schedBjText(g))}</span>
       </div>
     </div>
   </div>`;
@@ -1945,48 +2441,127 @@ async function renderHome(force){
 }
 
 /* ---------- 联赛详情 ---------- */
-function standingsTable(d){
-  return `<div class="table-wrap"><table>
-    <colgroup><col class="c-rank"><col class="c-team"><col class="c-num"><col class="c-num"><col class="c-num"><col class="c-num"></colgroup>
-    <thead><tr><th>${t('table.rank')}</th><th style="text-align:left">${t('table.team')}</th><th>${t('table.win')}</th><th>${t('table.lose')}</th><th>${t('table.pct')}</th><th>${t('table.form')}</th></tr></thead>
-    <tbody>${d.standings.map(team=>`
-      <tr class="row-hover">
-        <td class="num rank-${team.rank}">${team.rank}</td>
-        <td class="team-cell">${badgeHtml(team.abbr,team.color)}<span>${esc(team.name)}</span></td>
-        <td class="num">${team.win}</td><td class="num">${team.lose}</td>
-        <td class="num">${team.pct}</td><td>${esc(team.streak)}</td>
-      </tr>`).join('')}
-    </tbody></table></div>`;
+function _standNum(v){ const m=String(v==null?'':v).match(/\d+(?:\.\d+)?/); const n=m?parseFloat(m[0]):NaN; return isNaN(n)?0:n; }
+function _standSortRows(rows){
+  const k=state.standSort.k, desc=state.standSort.dir==='desc';
+  return rows.slice().sort((a,b)=>{
+    let c;
+    if(k==='name') c=String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN');
+    else if(k){ c=_standNum(a[k])-_standNum(b[k]); if(c===0) c=_standNum(a.rank)-_standNum(b.rank); }
+    else c=_standNum(a.rank)-_standNum(b.rank);
+    return desc?-c:c;
+  });
 }
-function scheduleTable(d){
+function _standCols(sport){
+  if(sport==='football') return [
+    {k:'rank',label:t('table.rank')},{k:'name',label:t('table.team')},
+    {k:'win',label:t('table.win')},{k:'draw',label:t('table.draw')},{k:'lose',label:t('table.lose')},
+    {k:'pct',label:t('table.points')},{k:'streak',label:t('table.form')}
+  ];
+  if(sport==='billiards') return [
+    {k:'rank',label:t('table.rank')},{k:'name',label:t('table.player')},
+    {k:'pct',label:t('table.prize')},{k:'streak',label:t('table.form')}
+  ];
+  return [
+    {k:'rank',label:t('table.rank')},{k:'name',label:t('table.team')},
+    {k:'win',label:t('table.win')},{k:'lose',label:t('table.lose')},
+    {k:'pct',label:t('table.pct')},{k:'streak',label:t('table.form')}
+  ];
+}
+function groupLabel(g){
+  if(!g) return '';
+  const m={East:'东部',West:'西部','Eastern Conference':'东部','Western Conference':'西部',东部:'东部',西部:'西部'};
+  return m[g]||g;
+}
+function standingsTable(d, sport){
+  const rows=d.standings||[];
+  if(!rows.length) return `<div class="empty-tip">${esc(t('league.noData'))}</div>`;
+  const cols=_standCols(sport||'basketball');
+  const groups=new Map();
+  rows.forEach(r=>{ const g=r.group||''; if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(r); });
+  const groupsArr=[...groups.entries()];
+  const standHead=()=>cols.map(c=>{
+    const active=state.standSort.k===c.k;
+    const arrow=active?(state.standSort.dir==='asc'?'▲':'▼'):'';
+    const align=c.k==='name'?' style="text-align:left"':'';
+    return `<th class="sortable${active?' on':''}"${align} data-stand="${c.k}">${c.label}${arrow?` <span class="num">${arrow}</span>`:''}</th>`;
+  }).join('');
+  const cell=(r,c)=>{
+    if(c.k==='name') return `<td class="team-cell">${badgeHtml(r.abbr,r.color)}<span>${esc(r.name)}</span></td>`;
+    if(c.k==='rank') return `<td class="num rank-${r.rank}">${r.rank}</td>`;
+    if(c.k==='streak') return `<td>${esc(r.streak||'—')}</td>`;
+    const v=r[c.k]; return `<td class="num">${v==null||v===''?'—':esc(v)}</td>`;
+  };
+  return groupsArr.map(([g,gRows])=>{
+    const sorted=_standSortRows(gRows);
+    const body=sorted.map(r=>`<tr class="row-hover">${cols.map(c=>cell(r,c)).join('')}</tr>`).join('');
+    const table=`<div class="table-wrap"><table>
+      <thead><tr>${standHead()}</tr></thead><tbody>${body}</tbody></table></div>`;
+    if(groupsArr.length===1) return table;
+    return `<details class="stand-group" open><summary><span>${esc(groupLabel(g))}</span><span class="num" style="color:var(--text-3)">${gRows.length} 队</span></summary>${table}</details>`;
+  }).join('');
+}
+function scheduleTable(d, lid){
   const stLabel = { live:t('status.live'), done:t('status.done'), upcoming:t('status.upcoming') };
+  const cityName = c => c ? (Store.settings.nameLang==='en' ? esc(c) : esc(zhCity(c))) : '—';
   return `<div class="table-wrap"><table>
-    <colgroup><col style="width:22%"><col style="width:38%"><col style="width:22%"><col style="width:18%"></colgroup>
-    <thead><tr><th>${t('table.date')}</th><th style="text-align:left">${t('table.match')}</th><th>${t('table.score')}</th><th>${t('table.status')}</th></tr></thead>
+    <colgroup><col style="width:18%"><col style="width:34%"><col style="width:18%"><col style="width:18%"><col style="width:12%"></colgroup>
+    <thead><tr><th>${t('table.date')}</th><th>${t('table.match')}</th><th>${t('table.score')}</th><th>${t('table.venue')||'比赛地'}</th><th>${t('table.status')}</th></tr></thead>
     <tbody>${(d.schedule||[]).map(s=>`
       <tr class="row-hover">
-        <td class="num">${esc(schedDateLabel(s.date))}</td>
-        <td style="text-align:left">${esc(s.home)} <span style="color:var(--text-3)">vs</span> ${esc(s.away)}</td>
-        <td class="num">${esc(s.score)}</td><td>${esc(stLabel[s.status]||s.status||'—')}</td>
+        <td class="num">${esc(schedBjText(s))}</td>
+        <td>${bilingualNameHtml(s.home, s.homeEn, lid)} <span style="color:var(--text-3)">vs</span> ${bilingualNameHtml(s.away, s.awayEn, lid)}</td>
+        <td class="num">${esc(s.score)}</td><td>${cityName(s.city)}</td><td>${esc(stLabel[s.status]||s.status||'—')}</td>
       </tr>`).join('')}
     </tbody></table></div>`;
 }
-function rankingsList(d, sport){
-  const tabs = (SPORT_CFG[sport]||SPORT_CFG.basketball).rankTabs;
-  if (!d.rankings[state.rankTab]) state.rankTab = tabs[0].k;
-  const rows = d.rankings[state.rankTab]||[];
+function rankCoreOf(cfg){ return cfg.rankCore||cfg.rankTabs||[]; }
+function rankMoreOf(cfg){ return cfg.rankMore||[]; }
+function _rankNum(v){ const m=String(v==null?'':v).match(/\d+(?:\.\d+)?/); const n=m?parseFloat(m[0]):NaN; return isNaN(n)?0:n; }
+function _rankSortRows(rows){
+  const k=state.rankSort.k, dir=state.rankSort.dir==='desc'?-1:1;
+  return rows.slice().sort((a,b)=>{
+    if(k==='name') return String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN')*dir;
+    if(k){ const d=_rankNum(a.val)-_rankNum(b.val); return d===0?String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN'):d*dir; }
+    return _rankNum(b.val)-_rankNum(a.val);
+  });
+}
+function rankingsList(d, sport, lid){
+  const cfg=SPORT_CFG[sport]||SPORT_CFG.basketball;
+  const core=rankCoreOf(cfg), more=rankMoreOf(cfg);
+  const all=core.concat(more);
+  const has=k=>d.rankings[k]&&d.rankings[k].length;
+  const availCore=core.filter(x=>has(x.k));
+  const availMore=more.filter(x=>has(x.k));
+  const avail=availCore.concat(availMore);
+  if(!all.length||!avail.length) return `<div class="empty-tip">${esc(t('league.noData'))}</div>`;
+  const cur=(state.rankTab&&avail.some(x=>x.k===state.rankTab))?state.rankTab:avail[0].k;
+  const rows=d.rankings[cur]||[];
+  const sorted=_rankSortRows(rows);
+  const tabBtn=tab=>`<button class="${cur===tab.k?'active':''}" data-rank="${tab.k}">${t(tab.label)}</button>`;
+  const nameActive=state.rankSort.k==='name';
+  const valActive=state.rankSort.k==='val';
+  const nameArrow=nameActive?(state.rankSort.dir==='desc'?'▼':'▲'):'';
+  const valArrow=valActive?(state.rankSort.dir==='desc'?'▼':'▲'):'';
+  const table=`<div class="table-wrap stat-table">
+    <table>
+      <colgroup><col style="width:34%"><col style="width:40%"><col style="width:26%"></colgroup>
+      <thead><tr>
+        <th class="sortable${nameActive?' on':''}" data-ranksort="name">${t('table.player')}${nameArrow?` <span class="num">${nameArrow}</span>`:''}</th>
+        <th style="text-align:left">${t('table.team')}</th>
+        <th class="sortable${valActive?' on':''}" data-ranksort="val">${t('stat.value')}${valArrow?` <span class="num">${valArrow}</span>`:''}</th>
+      </tr></thead>
+      <tbody>${sorted.map((r,i)=>`
+        <tr class="row-hover">
+          <td class="team-cell"><span class="p-num">${i+1}</span> <span>${bilingualNameHtml(r.name,r.en,lid)}</span></td>
+          <td>${esc(r.team)}</td>
+          <td class="num">${r.val}</td>
+        </tr>`).join('')}</tbody>
+    </table></div>`;
   return `
-    <div class="seg" style="margin:10px 0">
-      ${tabs.map(tab=>`<button class="${state.rankTab===tab.k?'active':''}" data-rank="${tab.k}">${t(tab.label)}</button>`).join('')}
-    </div>
-    <div class="rank-list">
-      ${rows.map((r,i)=>`
-        <div class="rank-item">
-          <span class="idx num">${i+1}</span>
-          <span><span class="p-name">${esc(r.name)}</span><br><span class="p-team">${esc(r.team)}</span></span>
-          <span class="p-val num">${r.val}</span>
-        </div>`).join('')}
-    </div>`;
+    ${availCore.length?`<div class="seg" style="margin:10px 0">${availCore.map(tabBtn).join('')}</div>`:''}
+    ${availMore.length?`<details class="stand-group rank-more"><summary>${t('rank.more')}</summary><div class="seg">${availMore.map(tabBtn).join('')}</div></details>`:''}
+    ${rows.length?table:`<div class="empty-tip">${esc(t('league.noData'))}</div>`}`;
 }
 function bracketHtml(detail){
   const b = detail.bracket;
@@ -2017,7 +2592,7 @@ function bracketHtml(detail){
   </div>`;
 }
 function summaryLeagueIds(){
-  return Object.keys(ESPN_LEAGUES).filter(id => {
+  return Object.keys(LEAGUES).filter(id => {
     const lg = LEAGUES[id]; if (!lg) return false;
     if (state.sport !== 'all' && lg.sport !== state.sport) return false;
     if (state.league !== 'all' && id !== state.league) return false;
@@ -2061,15 +2636,21 @@ function bindSummaryTabs(host){
     setTimeout(()=>{ router(); toast(t('toast.updated')); }, 150);
   }));
 }
+let summaryData = [];
 async function _loadSummary(){
   const ids = summaryLeagueIds();
   const out = await Promise.all(ids.map(async id=>{
     const d = await SportsProvider.getLeague(id);
     return d ? { id, meta:d.meta, detail:d.detail } : null;
   }));
-  return out.filter(Boolean);
+  summaryData = out.filter(Boolean);
+  return summaryData;
 }
 let rankReq = 0;
+function fillRankBody(body, detail, sport, lid){
+  body.innerHTML = standingsTable(detail, sport);
+  bindSummaryStand(body, detail, sport, lid);
+}
 async function renderRank(){
   const host = $('#rank-detail'); const my = ++rankReq;
   const details = await _loadSummary();
@@ -2077,9 +2658,35 @@ async function renderRank(){
   const valid = details.filter(x=>x.detail && x.detail.standings && x.detail.standings.length);
   if (!valid.length){ host.innerHTML = summaryHead(t('nav.rank'),t('rank.empty')) + summaryFilterHtml() + `<div class="empty-tip">${esc(t('rank.emptyTip'))}</div>`; bindSummaryTabs(host); return; }
   host.innerHTML = summaryHead(t('rank.title'),t('rank.sub')) + summaryFilterHtml() + valid.map(x=>{
-    return `<div class="detail-block"><h3>${esc(x.meta.name)}</h3>${standingsTable(x.detail)}</div>`;
+    const n=(x.detail.standings||[]).length;
+    const unit=(x.meta.sport==='billiards')?t('table.player'):t('table.team');
+    return `<details class="lg-block" data-lid="${x.id}" data-sport="${x.meta.sport||'basketball'}">
+      <summary class="lg-head"><span class="lg-name">${esc(x.meta.name)}</span><span class="lg-meta num">${n} ${unit}</span></summary>
+      <div class="lg-body"></div></details>`;
   }).join('');
   bindSummaryTabs(host);
+  host.querySelectorAll('details.lg-block').forEach(det=>{
+    det.addEventListener('toggle', async ()=>{
+      const lid=det.dataset.lid, sport=det.dataset.sport, body=det.querySelector('.lg-body');
+      if(!det.open) return;
+      if(!body.dataset.loaded){
+        body.dataset.loaded='1';
+        const item=summaryData.find(d=>d.id===lid);
+        if(item) fillRankBody(body, item.detail, sport, lid);
+        try{
+          const fresh=await SportsProvider.getLeague(lid);
+          if(fresh){
+            const idx=summaryData.findIndex(d=>d.id===lid);
+            if(idx>=0) summaryData[idx]={id:lid,meta:fresh.meta,detail:fresh.detail};
+            fillRankBody(body, fresh.detail, sport, lid);
+          }
+        }catch(e){}
+      }
+    });
+  });
+}
+function fillSchedBody(body, detail, lid){
+  body.innerHTML = scheduleTable(detail, lid);
 }
 let schedReq = 0;
 async function renderSchedule(){
@@ -2089,9 +2696,54 @@ async function renderSchedule(){
   const valid = details.filter(x=>x.detail && x.detail.schedule && x.detail.schedule.length);
   if (!valid.length){ host.innerHTML = summaryHead(t('nav.schedule'),t('schedule.empty')) + summaryFilterHtml() + `<div class="empty-tip">${esc(t('schedule.emptyTip'))}</div>`; bindSummaryTabs(host); return; }
   host.innerHTML = summaryHead(t('schedule.title'),t('schedule.sub')) + summaryFilterHtml() + valid.map(x=>{
-    return `<div class="detail-block"><h3>${esc(x.meta.name)}</h3>${scheduleTable(x.detail)}</div>`;
+    const n=(x.detail.schedule||[]).length;
+    return `<details class="lg-block" data-lid="${x.id}">
+      <summary class="lg-head"><span class="lg-name">${esc(x.meta.name)}</span><span class="lg-meta num">${n} 场</span></summary>
+      <div class="lg-body"></div></details>`;
   }).join('');
   bindSummaryTabs(host);
+  host.querySelectorAll('details.lg-block').forEach(det=>{
+    det.addEventListener('toggle', async ()=>{
+      const lid=det.dataset.lid, body=det.querySelector('.lg-body');
+      if(!det.open) return;
+      if(!body.dataset.loaded){
+        body.dataset.loaded='1';
+        const item=summaryData.find(d=>d.id===lid);
+        if(item) fillSchedBody(body, item.detail, lid);
+        try{
+          const fresh=await SportsProvider.getLeague(lid);
+          if(fresh){
+            const idx=summaryData.findIndex(d=>d.id===lid);
+            if(idx>=0) summaryData[idx]={id:lid,meta:fresh.meta,detail:fresh.detail};
+            fillSchedBody(body, fresh.detail, lid);
+          }
+        }catch(e){}
+      }
+    });
+  });
+}
+function fillPlayersBody(body, detail, lid, sport){
+  const d = detail;
+  const allTabs = rankCoreOf(SPORT_CFG[sport||'basketball']);
+  const tabs = allTabs.filter(t=>d.rankings[t.k]&&d.rankings[t.k].length);
+  let cur = state.playerTab[lid] && tabs.some(t=>t.k===state.playerTab[lid]) ? state.playerTab[lid] : tabs[0].k;
+  if (!d.rankings[cur]) cur = tabs[0].k;
+  const rows = d.rankings[cur]||[];
+  body.innerHTML = `
+    <div class="seg" style="margin:10px 0">
+      ${tabs.map(tab=>`<button class="${cur===tab.k?'active':''}" data-ptab="${tab.k}" data-pleague="${lid}">${t(tab.label)}</button>`).join('')}
+    </div>
+    <div class="rank-list">
+      ${rows.map((r,i)=>`<div class="rank-item">
+        <span class="idx num">${i+1}</span>
+        <span><span class="p-name">${bilingualNameHtml(r.name, r.en, lid)}</span><br><span class="p-team">${esc(r.team)}</span></span>
+        <span class="p-val num">${r.val}</span></div>`).join('')}
+    </div>`;
+  body.querySelectorAll('[data-ptab]').forEach(b=>b.addEventListener('click',()=>{
+    state.playerTab[lid] = b.dataset.ptab;
+    const item = summaryData.find(x=>x.id===lid);
+    fillPlayersBody(body, item?item.detail:d, lid, sport);
+  }));
 }
 let playersReq = 0;
 async function renderPlayers(){
@@ -2104,27 +2756,31 @@ async function renderPlayers(){
     bindSummaryTabs(host); return;
   }
   host.innerHTML = summaryHead(t('players.title'),t('players.sub')) + summaryFilterHtml() + valid.map(x=>{
-    const lg = x.meta, d = x.detail;
-    const tabs = (SPORT_CFG[lg.sport]||SPORT_CFG.basketball).rankTabs;
-    let cur = state.playerTab[x.id] || tabs[0].k;
-    if (!d.rankings[cur]) cur = tabs[0].k;
-    const rows = d.rankings[cur]||[];
-    return `<div class="detail-block">
-      <h3>${esc(lg.name)}</h3>
-      <div class="seg" style="margin:10px 0">
-        ${tabs.map(tab=>`<button class="${cur===tab.k?'active':''}" data-ptab="${tab.k}" data-pleague="${x.id}">${t(tab.label)}</button>`).join('')}
-      </div>
-      <div class="rank-list">
-        ${rows.map((r,i)=>`<div class="rank-item">
-          <span class="idx num">${i+1}</span>
-          <span><span class="p-name">${esc(r.name)}</span><br><span class="p-team">${esc(r.team)}</span></span>
-          <span class="p-val num">${r.val}</span></div>`).join('')}
-      </div></div>`;
+    const n=Object.values(x.detail.rankings).reduce((a,arr)=>a+(arr||[]).length,0);
+    return `<details class="lg-block" data-lid="${x.id}" data-sport="${x.meta.sport||'basketball'}">
+      <summary class="lg-head"><span class="lg-name">${esc(x.meta.name)}</span><span class="lg-meta num">${n} 人</span></summary>
+      <div class="lg-body"></div></details>`;
   }).join('');
   bindSummaryTabs(host);
-  host.querySelectorAll('[data-ptab]').forEach(b=>b.addEventListener('click',()=>{
-    state.playerTab[b.dataset.pleague] = b.dataset.ptab; renderPlayers();
-  }));
+  host.querySelectorAll('details.lg-block').forEach(det=>{
+    det.addEventListener('toggle', async ()=>{
+      const lid=det.dataset.lid, sport=det.dataset.sport, body=det.querySelector('.lg-body');
+      if(!det.open) return;
+      if(!body.dataset.loaded){
+        body.dataset.loaded='1';
+        const item=summaryData.find(d=>d.id===lid);
+        if(item) fillPlayersBody(body, item.detail, lid, sport);
+        try{
+          const fresh=await SportsProvider.getLeague(lid);
+          if(fresh){
+            const idx=summaryData.findIndex(d=>d.id===lid);
+            if(idx>=0) summaryData[idx]={id:lid,meta:fresh.meta,detail:fresh.detail};
+            fillPlayersBody(body, fresh.detail, lid, sport);
+          }
+        }catch(e){}
+      }
+    });
+  });
 }
 let leagueReq = 0;
 async function renderLeague(leagueId){
@@ -2137,12 +2793,13 @@ async function renderLeague(leagueId){
   pushHistory('league', leagueId, meta.name);
   const followed = isFollowing('league', leagueId);
   const cons = consistencyOf(leagueId);
-  const tabs = [
+  const tabs = [];
+  if (specialEventVisible(meta, detail)) tabs.push({ id:'bracket', label: meta.special==='knockout'||meta.sport==='football'?'tab.knockout':'tab.playoffs' });
+  tabs.push(
     { id:'standings', label:'tab.standings' },
     { id:'schedule',  label:'tab.schedule' },
     { id:'rankings',  label:'tab.rankings' },
-  ];
-  if (detail.bracket) tabs.push({ id:'bracket', label: meta.sport==='football'?'tab.knockout':'tab.playoffs' });
+  );
   if (!tabs.some(tab=>tab.id===state.leagueTab)) state.leagueTab = 'standings';
   host.innerHTML = `
     <div class="league-head">
@@ -2159,19 +2816,18 @@ async function renderLeague(leagueId){
     <div id="league-body"></div>`;
   const body = $('#league-body');
   const paint = ()=>{
-    if (state.leagueTab==='standings') body.innerHTML = standingsTable(detail);
-    else if (state.leagueTab==='schedule') body.innerHTML = scheduleTable(detail);
+    if (state.leagueTab==='standings') body.innerHTML = standingsTable(detail, meta.sport);
+    else if (state.leagueTab==='schedule') body.innerHTML = scheduleTable(detail, leagueId);
     else if (state.leagueTab==='bracket') body.innerHTML = bracketHtml(detail);
-    else body.innerHTML = rankingsList(detail, meta.sport);
+    else body.innerHTML = rankingsList(detail, meta.sport, leagueId);
+    bindStandHeaders(body, detail, meta);
+    bindRankTabs(body, detail, meta.sport, leagueId);
   };
   paint();
   host.querySelectorAll('[data-ltab]').forEach(b=>b.addEventListener('click',()=>{
     state.leagueTab = b.dataset.ltab;
     host.querySelectorAll('[data-ltab]').forEach(x=>x.classList.toggle('active', x.dataset.ltab===state.leagueTab));
     paint();
-  }));
-  host.querySelectorAll('[data-rank]').forEach(b=>b.addEventListener('click',()=>{
-    state.rankTab = b.dataset.rank; paint();
   }));
   host.querySelector('[data-back]').addEventListener('click', ()=>{ location.hash = '#/'; });
   const fb = host.querySelector('[data-follow-league]');
@@ -2189,7 +2845,7 @@ function courtShotStat(g, period){
   const shots=(g.shots||[]).filter(s=> period==null || Number(s.period)===Number(period));
   return { made:shots.filter(s=>s.made).length, miss:shots.filter(s=>!s.made).length };
 }
-/* 动作流节次标题点击 → 场地缩略图按该节筛选点位；再次点击回到全场 */
+/* 球场下方节次下拉切换 → 场地缩略图按该节筛选点位与命中/未中统计；选全场回到全部 */
 function refreshCourt(host, g){
   const c=$('#court-host'); if(!c) return;
   c.innerHTML=courtSvg(g, courtPeriod);
@@ -2200,15 +2856,32 @@ function refreshCourt(host, g){
   const hm=host.querySelector('.court-hit'); if(hm) hm.textContent=t('court.shotStat',{made:stat.made,miss:stat.miss});
 }
 function shotsHtml(g, period){
-  /* ESPN 篮球坐标：x 0–50（全场宽）、y 0–47（纵深）；按主客落到左右半场 SVG；period 非空时只画该节 */
+  /* ESPN 篮球为单筐半场平面坐标：x 横跨 0–50（中线 x=25），y 从筐向中场的纵深(ft)；两队同视角。
+     场地几何与 courtBasketball 同一套 英尺→像素 变换：纵深沿水平、横跨沿垂直。 */
   const shots=(g.shots||[]).filter(s=> period==null || Number(s.period)===Number(period));
+  const isBasket = g.sport==='basketball';
+  const X0=18, XMID=300, X1=582, YMID=160, TOP=24, BOT=296;
+  const scaleX=(XMID-X0)/47, scaleY=(BOT-TOP)/50, basketZ=5.25;
   return shots.map(s=>{
+    const x=Number(s.x), y=Number(s.y);
+    if(isNaN(x)||isNaN(y)) return '';
     const isHome=s.side!=='away';
-    const baseX=isHome?18:312, w=270;
-    const px=baseX+(Math.max(0,Math.min(50,s.x))/50)*w;
-    const py=24+(Math.max(0,Math.min(47,s.y))/47)*272;
-    if(s.made) return `<circle cx="${px}" cy="${py}" r="5" fill="#3B82F6" fill-opacity=".95" stroke="rgba(255,255,255,.4)" stroke-width="1"/>`;
-    return `<text x="${px}" y="${py+3.5}" text-anchor="middle" fill="#F87171" font-size="12" font-weight="800">✕</text>`;
+    const color=isHome?(g.home.color||'#3B82F6'):(g.away.color||'#F472B6');
+    let px, py;
+    if(isBasket){
+      const off=x-25;
+      if(off<-25||off>25||y<-3||y>42) return '';
+      const z=basketZ+Math.max(0,y);
+      py=YMID+off*scaleY;
+      px=isHome ? X0+z*scaleX : X1-z*scaleX;
+      px=Math.max(isHome?X0:XMID, Math.min(isHome?XMID:X1, px));
+      py=Math.max(TOP, Math.min(BOT, py));
+    } else {
+      const baseX=isHome?18:312, w=270;
+      px=baseX+(x/50)*w; py=24+(y/47)*272;
+    }
+    if(s.made) return `<circle cx="${px}" cy="${py}" r="5" fill="${color}" fill-opacity=".95" stroke="rgba(255,255,255,.4)" stroke-width="1"/>`;
+    return `<circle cx="${px}" cy="${py}" r="5" fill="none" stroke="${color}" stroke-opacity=".75" stroke-width="1.5"/><text x="${px}" y="${py+3.5}" text-anchor="middle" fill="${color}" font-size="11" font-weight="800">✕</text>`;
   }).join('');
 }
 function possessionHtml(g){
@@ -2226,14 +2899,13 @@ function possessionHtml(g){
   } else {
     cx = homeSide ? 120 : 480; cy = 160;
   }
-  const dir = homeSide ? 1 : -1;
+  const dir = homeSide ? -1 : 1;
   const labelY = Math.min(cy+32, 292);
   return `
     <g>
       <circle cx="${cx}" cy="${cy}" r="14" fill="${homeSide?g.home.color:g.away.color}"/>
       <path d="M ${cx+dir*16} ${cy} l ${dir*22} 0 M ${cx+dir*30} ${cy-8} l 10 8 l -10 8" stroke="${homeSide?g.home.color:g.away.color}" stroke-width="3" fill="none"/>
       ${holderLabel?`<text x="${cx}" y="${labelY}" text-anchor="middle" fill="#F5F3FF" font-size="11" font-weight="700">${holderLabel}</text>`:''}
-      <text x="300" y="40" text-anchor="middle" fill="#22D3EE" font-size="12">${esc(g.lastPlay||'')}</text>
     </g>`;
 }
 function courtSvg(g, period){
@@ -2242,14 +2914,6 @@ function courtSvg(g, period){
   if (g.sport==='esports') return courtEsports(g);
   if (g.sport==='tennis') return courtTennis(g);
   return courtBasketball(g, period);
-}
-/* 场地半场队标：优先官方队标图，无图时回退缩写徽章圆 */
-function courtLogo(side, cx, cy){
-  if(!side) return '';
-  if(side.logo) return `<image href="${esc(side.logo)}" x="${cx-17}" y="${cy-17}" width="34" height="34" rx="8"/>`;
-  const abbr=side.abbr||'';
-  if(abbr) return `<circle cx="${cx}" cy="${cy}" r="17" fill="${side.color}22" stroke="${side.color}55"/><text x="${cx}" y="${cy+4}" text-anchor="middle" fill="${side.color}" font-size="12" font-weight="800">${esc(abbr)}</text>`;
-  return '';
 }
 function courtTennis(g){
   const hc=g.home.color, ac=g.away.color;
@@ -2267,21 +2931,31 @@ function courtTennis(g){
 }
 function courtBasketball(g, period){
   const homeColor = g.home.color, awayColor = g.away.color;
+  const line='rgba(255,255,255,.22)';
+  /* 英尺→像素：半场 47ft(纵深,水平) × 50ft(横跨,垂直)；筐距底线 5.25ft */
+  const X0=18, XMID=300, X1=582, YMID=160;
+  const sx=(XMID-X0)/47, sy=(296-24)/50, bz=5.25;
+  const bxL=X0+bz*sx, bxR=X1-bz*sx;
+  const paintD=19*sx, paintW=8*sy, freeR=6*sy;
+  const threeRx=23.75*sx, threeRy=23.75*sy;
   return `
   <svg class="court-svg" viewBox="0 0 600 320" role="img" aria-label="篮球场地示意图">
     <rect x="0" y="0" width="600" height="320" rx="16" fill="#1E1A3E"/>
-    <rect x="18" y="24" width="270" height="272" rx="12" fill="${homeColor}14" stroke="rgba(255,255,255,.18)"/>
-    <rect x="312" y="24" width="270" height="272" rx="12" fill="${awayColor}14" stroke="rgba(255,255,255,.18)"/>
-    <line x1="300" y1="24" x2="300" y2="296" stroke="rgba(255,255,255,.25)"/>
-    <circle cx="300" cy="160" r="34" fill="none" stroke="rgba(255,255,255,.25)"/>
-    <path d="M 60 24 A 100 100 0 0 1 60 296" fill="none" stroke="rgba(255,255,255,.18)"/>
-    <path d="M 540 24 A 100 100 0 0 0 540 296" fill="none" stroke="rgba(255,255,255,.18)"/>
+    <rect x="18" y="24" width="282" height="272" rx="12" fill="${homeColor}14" stroke="${line}"/>
+    <rect x="300" y="24" width="282" height="272" rx="12" fill="${awayColor}14" stroke="${line}"/>
+    <line x1="300" y1="24" x2="300" y2="296" stroke="${line}"/>
+    <circle cx="300" cy="160" r="30" fill="none" stroke="${line}"/>
+    <!-- 左筐（主队进攻）：三秒区、罚球线、筐点、三分弧 -->
+    <rect x="18" y="${YMID-paintW}" width="${paintD}" height="${paintW*2}" fill="none" stroke="${line}"/>
+    <line x1="${18+paintD}" y1="${YMID-paintW}" x2="${18+paintD}" y2="${YMID+paintW}" stroke="${line}"/>
+    <circle cx="${bxL}" cy="${YMID}" r="3" fill="rgba(255,255,255,.6)"/>
+    <path d="M ${bxL} ${YMID-threeRy} A ${threeRx} ${threeRy} 0 0 1 ${bxL} ${YMID+threeRy}" fill="none" stroke="rgba(255,255,255,.18)"/>
+    <!-- 右筐（客队进攻）：对称 -->
+    <rect x="${X1-paintD}" y="${YMID-paintW}" width="${paintD}" height="${paintW*2}" fill="none" stroke="${line}"/>
+    <line x1="${X1-paintD}" y1="${YMID-paintW}" x2="${X1-paintD}" y2="${YMID+paintW}" stroke="${line}"/>
+    <circle cx="${bxR}" cy="${YMID}" r="3" fill="rgba(255,255,255,.6)"/>
+    <path d="M ${bxR} ${YMID-threeRy} A ${threeRx} ${threeRy} 0 0 0 ${bxR} ${YMID+threeRy}" fill="none" stroke="rgba(255,255,255,.18)"/>
     ${shotsHtml(g, period)}
-    ${courtLogo(g.home,153,42)}
-    ${courtLogo(g.away,447,42)}
-    <text x="153" y="90" text-anchor="middle" fill="${homeColor}" font-size="13" font-weight="700">${esc(g.home.name)}</text>
-    <text x="447" y="90" text-anchor="middle" fill="${awayColor}" font-size="13" font-weight="700">${esc(g.away.name)}</text>
-    ${centerHtml(g)}
     ${possessionHtml(g)}
   </svg>`;
 }
@@ -2302,8 +2976,6 @@ function courtFootball(g, period){
     <path d="M 108 90 A 60 60 0 0 1 108 230" fill="none" stroke="rgba(255,255,255,.16)"/>
     <path d="M 492 90 A 60 60 0 0 0 492 230" fill="none" stroke="rgba(255,255,255,.16)"/>
     ${shotsHtml(g, period)}
-    ${courtLogo(g.home,120,42)}
-    ${courtLogo(g.away,480,42)}
     <text x="120" y="90" text-anchor="middle" fill="${homeColor}" font-size="13" font-weight="700">${esc(g.home.name)}</text>
     <text x="480" y="90" text-anchor="middle" fill="${awayColor}" font-size="13" font-weight="700">${esc(g.away.name)}</text>
     ${centerHtml(g)}
@@ -2347,12 +3019,13 @@ function courtEsports(g){
     ${centerHtml(g)}
   </svg>`;
 }
-function teamPanel(team, side){
+function teamPanel(team, side, showStar){
   const record = team.record || '—';
   const rank = team.rank || '—';
+  const star = showStar ? `<button class="star-btn sm ${isFollowing('team',teamFollowId(team.name))?'active':''}" data-follow-team="${side}" title="关注球队" type="button">★</button>` : '';
   return `
   <div class="vs-panel">
-    <div class="t-name">${badgeHtml(team.abbr,team.color)} ${esc(team.name)}</div>
+    <div class="t-name">${badgeHtml(team.abbr,team.color)} ${esc(team.name)} ${star}</div>
     <div class="t-row"><span>${t('team.record')}</span><b>${esc(record)}</b></div>
     <div class="t-row"><span>${t('team.rank')}</span><b>${esc(rank)}</b></div>
     <div class="t-row"><span>${t('team.last5')}</span><b>${esc(team.streak||'—')}</b></div>
@@ -2362,6 +3035,29 @@ function teamPanel(team, side){
 /* 按源对象格式化统计；usePrev=true 取上一场数据 */
 function _n(v){ const n=parseInt(v,10); return isNaN(n)?0:n; }
 function _statNum(r,k){ const n=parseFloat(r&&r[k]); return isNaN(n)?0:n; }
+/* 跨源字段别名归一：ESPN 失误为 TO，腾讯/代理为 tov；效率优先 +/-（plusMinus） */
+function _statRaw(r, k){
+  if(!r) return '';
+  if(k==='tov'){ return r.tov!=null?r.tov:(r.to!=null?r.to:(r.turnovers!=null?r.turnovers:(r.turnover!=null?r.turnover:''))); }
+  if(k==='eff'){ if(r.eff!=null) return r.eff; if(r['+/-']!=null) return r['+/-']; if(r.plusminus!=null) return r.plusminus; return ''; }
+  return r[k];
+}
+/* 球员效率：上游有 +/- 直接用；否则按 PIR 近似（得分+篮板+助攻+抢断+盖帽-失误） */
+function _effVal(r){
+  const v=_statRaw(r,'eff');
+  if(v!=null && v!=='') return v;
+  const pts=_statNum(r,'pts'), reb=_statNum(r,'reb'), ast=_statNum(r,'ast'),
+        stl=_statNum(r,'stl'), blk=_statNum(r,'blk');
+  if(!(pts||reb||ast||stl||blk)) return '';
+  const tov=_statNum(r,'tov')||_statNum(r,'to');
+  const eff=pts+reb+ast+stl+blk-tov;
+  return (eff>=0?'+':'')+eff;
+}
+function _statCell(r,k){
+  if(k==='eff'){ const e=_effVal(r); return e===''?'—':e; }
+  const v=_statRaw(r,k);
+  return (v!=null&&v!=='')?esc(v):'—';
+}
 function fmtStats(s, sport){
   if (!s) return '—';
   if (sport==='football') return `${_n(s.goals)}球 ${_n(s.assists)}助 ${_n(s.shots)}射`;
@@ -2377,6 +3073,120 @@ function playerStats(r, sport, upcoming, usePrev){
 }
 /* 上一场/本场切换状态：key = 队伍id|球员名；完场后本场数据保留，待下一场由数据源刷新 */
 const prevOpen = {};
+/* ---------- 赛事预测（未开赛 · 规则推演 + 可手改） ---------- */
+function _recWinRate(team){
+  if(team && team.record){
+    const m=String(team.record).match(/(\d+)\s*[-–]\s*(\d+)/);
+    if(m){ const w=+m[1], l=+m[2]; if(w+l>0) return w/(w+l); }
+  }
+  if(team && Array.isArray(team.form) && team.form.length){
+    const w=team.form.filter(f=>/^w/i.test(f)).length;
+    return w/team.form.length;
+  }
+  return null;
+}
+function _formRate(team){
+  if(team && Array.isArray(team.form) && team.form.length){
+    const w=team.form.filter(f=>/^w/i.test(f)).length;
+    return w/team.form.length;
+  }
+  return null;
+}
+function _rankFactor(team){
+  const r=parseInt(team && team.rank, 10);
+  if(!isNaN(r) && r>0) return Math.max(0, Math.min(1, 1-(r-1)/15));
+  return null;
+}
+function _rosterFactor(team){
+  const r=team && team.roster;
+  if(!Array.isArray(r) || !r.length) return null;
+  const st=r.filter(x=>x.starter).length;
+  return Math.max(0, Math.min(1, st/Math.min(5, r.length) || 0.5));
+}
+/* 预留因子（阶段二接入数据源后填实；当前缺数据按中性 0.5）：伤病名单 / 背靠背赛程 / 主客场对手分部 / 近三场主力上场时间与动作流表现 */
+function _injuryFactor(){ return 0.5; }
+function _b2bFactor(){ return 0.5; }
+function _divisionFactor(){ return 0.5; }
+function _playerFormFactor(){ return 0.5; }
+function _teamScore(team, g, isHome, football){
+  const win=_recWinRate(team), form=_formRate(team), rank=_rankFactor(team), roster=_rosterFactor(team);
+  const factors = football
+    ? [ [win,0.55], [form,0.25], [rank,0], [roster,0], [_injuryFactor(),0], [_b2bFactor(),0], [_divisionFactor(),0], [_playerFormFactor(),0] ]
+    : [ [win,0.40], [form,0.15], [rank,0.15], [roster,0.10], [_injuryFactor(),0.06], [_b2bFactor(),0.04], [_divisionFactor(),0.05], [_playerFormFactor(),0.05] ];
+  let num=0, den=0;
+  factors.forEach(([v,w])=>{ if(w>0){ num += (v==null?0.5:v)*w; den += w; } });
+  let score = den>0 ? num/den : 0.5;
+  if(isHome) score += 0.06; else score -= 0.06;
+  return Math.max(0.02, Math.min(0.98, score));
+}
+function predictHash(roster){ return (roster||[]).map(r=>r.name).sort().join('|'); }
+function autoPredict(g){
+  const football = g.sport==='football';
+  const hF=_teamScore(g.home, g, true, football);
+  const aF=_teamScore(g.away, g, false, football);
+  let pHome = hF/(hF+aF);
+  pHome = Math.max(0.12, Math.min(0.88, pHome));
+  let hs, as;
+  if(football){
+    if(Math.abs(pHome-0.5)<0.12){ hs=1; as=1; }
+    else if(pHome>=0.5){ hs=1; as=0; } else { hs=0; as=1; }
+  } else {
+    hs=Math.round(100 + (pHome-0.5)*16); as=Math.round(100 - (pHome-0.5)*16);
+  }
+  return { pHome:Math.round(pHome*100), pAway:Math.round((1-pHome)*100), homeScore:hs, awayScore:as, manual:false };
+}
+function getPredict(g){ const all=Store.predict; return all[g.id]||null; }
+function runPredict(g){ const r=autoPredict(g); const all=Store.predict; all[g.id]=r; Store.predict=all; return r; }
+function resetPredict(g){ const all=Store.predict; delete all[g.id]; Store.predict=all; }
+/* 完场沉淀参照：按队分桶近 10 场；名单/教练哈希变更则清旧桶 */
+function recordRef(g){
+  if(g.status!=='done' || !g.score || g.score.home==null) return;
+  const ref=Store.predictRef;
+  const push=(name, opp, gf, ga, roster)=>{
+    if(!name) return;
+    const k=followNorm(name), bucket=ref[k]||{hash:'', games:[]};
+    const hash=predictHash(roster);
+    if(bucket.hash && bucket.hash!==hash) bucket.games=[];
+    bucket.hash=hash;
+    bucket.games.unshift({opp:followNorm(opp), gf, ga, ts:Date.now()});
+    bucket.games=bucket.games.slice(0,10);
+    ref[k]=bucket;
+  };
+  push(g.home.name, g.away.name, g.score.home, g.score.away, g.home.roster);
+  push(g.away.name, g.home.name, g.score.away, g.score.home, g.away.roster);
+  Store.predictRef=ref;
+  const all=Store.predict; delete all[g.id]; Store.predict=all;
+}
+function predictBlock(g){
+  if(g.sport!=='basketball' && g.sport!=='football') return '';
+  if(g.status!=='upcoming') return '';
+  const p=getPredict(g);
+  const predicted=!!p;
+  const pH=predicted?p.pHome:0, pA=predicted?p.pAway:0;
+  const hs=predicted?p.homeScore:0, as=predicted?p.awayScore:0;
+  return `<div class="detail-block">
+    <h3>${t('detail.predict')}</h3>
+    <div class="predict-card">
+      <div class="predict-chance">
+        <span class="pc-team">${esc(g.home.name)}</span>
+        <div class="pc-bar"><i class="pc-h" style="width:${pH}%"></i><i class="pc-a" style="width:${pA}%"></i></div>
+        <span class="pc-team">${esc(g.away.name)}</span>
+      </div>
+      <div class="pc-score">
+        <span class="pc-score-num">${hs}</span>
+        <span class="pc-vs">VS</span>
+        <span class="pc-score-num">${as}</span>
+      </div>
+      <div class="pc-foot">
+        <span class="pc-hint">${t('predict.base')}</span>
+        <span class="pc-actions">
+          <button class="mini-btn ${predicted?'':'primary'}" id="predict-run" type="button" ${predicted?'disabled':''}>${t('predict.run')}</button>
+          <button class="mini-btn ${predicted?'primary':''}" id="predict-reset" type="button" ${predicted?'':'disabled'}>${t('predict.reset')}</button>
+        </span>
+      </div>
+    </div>
+  </div>`;
+}
 function rosterBlock(team, upcoming, sport, side){
   const roster = team.roster || [];
   if (!roster.length) return `<div class="empty-tip">${esc(t('league.noData'))}</div>`;
@@ -2394,6 +3204,8 @@ function rosterBlock(team, upcoming, sport, side){
     const open = !!prevOpen[key];
     const showPrev = upcoming ? !!r.prev : open;
     const stats = playerStats(r, sport, upcoming, showPrev);
+    const pid = playerFollowId(team.name, r.name);
+    const pstar = `<button class="star-btn sm ${isFollowing('player',pid)?'active':''}" data-follow-player data-team="${esc(team.name||'')}" data-name="${esc(r.name)}" title="关注选手" type="button">★</button>`;
     const toggle = (!upcoming && r.prev)
       ? `<button class="prev-toggle ${open?'on':''}" data-side="${esc(side)}" data-name="${esc(r.name)}" type="button">${open?t('roster.cur'):t('roster.prev')}</button>`
       : (upcoming && r.prev ? `<span class="prev-tag">${t('roster.prev')}</span>` : '');
@@ -2401,7 +3213,7 @@ function rosterBlock(team, upcoming, sport, side){
     <div class="player-row">
       <span class="p-left"><span>${esc(r.name)}</span><span class="p-num">${r.num?esc(r.num)+' · ':''}${esc(r.pos||r.country||'')}</span></span>
       <span class="p-right">
-        ${toggle}
+        <span class="p-row-top">${pstar}${toggle}</span>
         <span class="p-stats num">${stats}</span>
       </span>
     </div>`;
@@ -2433,24 +3245,24 @@ function renderRoster(host, g, upcoming, sport){
   });
 }
 /* 技术统计表：独立渲染，表头排序只局部重绘本表，不联动动作流折叠状态 */
-function statsHtmlFor(g, upcoming){
-  const cfg=SPORT_CFG[g.sport]||SPORT_CFG.basketball;
-  const cols=cfg.statsCols;
-  const allRows=(g.home.roster||[]).concat(g.away.roster||[]);
-  let statRows=allRows;
-  if(state.statSort.k==='name'){
-    statRows=allRows.slice().sort((a,b)=>{
-      const d=String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN');
-      return state.statSort.dir==='desc'?-d:d;
-    });
-  }else if(state.statSort.k){
-    statRows=allRows.slice().sort((a,b)=>{
-      const d=_statNum(b,state.statSort.k)-_statNum(a,state.statSort.k);
-      return state.statSort.dir==='asc'?-d:d;
-    });
-  }else{
-    statRows=allRows.slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN'));
-  }
+function _sortVal(r,k){
+  if(k==='name') return String(r.name||'');
+  if(k==='eff'){ const e=_effVal(r); const n=parseFloat(e); return isNaN(n)?0:n; }
+  return _statNum(r,k)||parseFloat(_statRaw(r,k))||0;
+}
+function _sortRows(rows){
+  const k=state.statSort.k, dir=state.statSort.dir==='desc'?-1:1;
+  const isTotal=r=>!!(r.isTotal||r.name==='统计'||r.name==='合计'||r.name==='总分');
+  const total=rows.filter(isTotal);
+  const rest=rows.filter(r=>!isTotal(r));
+  const sorted=rest.slice().sort((a,b)=>{
+    if(k==='name') return String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN')*dir;
+    if(k){ const d=_sortVal(a,k)-_sortVal(b,k); return d===0?String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN'):d*dir; }
+    return String(a.name||'').localeCompare(String(b.name||''),'zh-Hans-CN');
+  });
+  return sorted.concat(total);
+}
+function _statTable(cols, rows){
   const statHead=cols.map(c=>{
     const active=state.statSort.k===c.k;
     const arrow=active?(state.statSort.dir==='desc'?'▼':'▲'):'';
@@ -2459,20 +3271,96 @@ function statsHtmlFor(g, upcoming){
   const nameActive=state.statSort.k==='name';
   const nameArrow=nameActive?(state.statSort.dir==='desc'?'▼':'▲'):'';
   const nameTh=`<th class="sortable${nameActive?' on':''}" data-stat="name">${t('table.player')}${nameArrow?` <span class="num">${nameArrow}</span>`:''}</th>`;
-  if(upcoming) return `<div class="empty-tip">比赛未开始，技术数据将在开赛后实时更新</div>`;
   return `<div class="table-wrap stat-table">
     <table>
       <colgroup><col style="width:26%">${cols.map(()=>'<col class="c-num">').join('')}</colgroup>
       <thead><tr>${nameTh}${statHead}</tr></thead>
       <tbody>
-        ${statRows.map(r=>`
-          <tr class="row-hover">
+        ${rows.map(r=>{
+          const tc=r.isTotal||r.name==='统计'||r.name==='合计'||r.name==='总分';
+          return `<tr class="${tc?'stat-total':'row-hover'}">
             <td class="team-cell">${r.num?`<span class="p-num">${esc(r.num)}</span>`:''}<span>${esc(r.name)}</span></td>
-            ${cols.map(c=>`<td class="num">${r[c.k]!=null&&r[c.k]!==''?esc(r[c.k]):'—'}</td>`).join('')}
-          </tr>`).join('')}
+            ${cols.map(c=>`<td class="num">${_statCell(r,c.k)}</td>`).join('')}
+          </tr>`;
+        }).join('')}
       </tbody>
     </table>
   </div>`;
+}
+function _statGroupTitle(team, side){
+  const tagCls = side==='home' ? 'status-upcoming' : 'status-done';
+  const tagText = side==='home' ? t('team.home') : t('team.away');
+  const logo = team.logo ? `<img class="g-logo" src="${esc(team.logo)}" alt="" loading="lazy" onerror="this.remove()">` : '';
+  return `<div class="stat-group-title">${logo}<span>${esc(team.name||'—')}</span><span class="g-tag ${tagCls}">${tagText}</span></div>`;
+}
+function statsHtmlFor(g, upcoming){
+  const cfg=SPORT_CFG[g.sport]||SPORT_CFG.basketball;
+  const cols=cfg.statsCols;
+  if(upcoming) return `<div class="empty-tip">比赛未开始，技术数据将在开赛后实时更新</div>`;
+  /* 篮球按主队 / 客队分组；其他运动沿用合并一张表 */
+  if(g.sport==='basketball'){
+    const homeRows=_sortRows(g.home.roster||[]);
+    const awayRows=_sortRows(g.away.roster||[]);
+    if(!homeRows.length && !awayRows.length) return `<div class="empty-tip">${esc(t('league.noData'))}</div>`;
+    return `<div class="stat-groups">
+      ${homeRows.length?`<div class="stat-group">${_statGroupTitle(g.home,'home')}${_statTable(cols,homeRows)}</div>`:''}
+      ${awayRows.length?`<div class="stat-group">${_statGroupTitle(g.away,'away')}${_statTable(cols,awayRows)}</div>`:''}
+    </div>`;
+  }
+  const allRows=(g.home.roster||[]).concat(g.away.roster||[]);
+  return _statTable(cols, _sortRows(allRows));
+}
+function eventWindowActive(meta){
+  const now=new Date();
+  const pad=7*24*3600*1000;
+  const sKey=meta.specialStart||meta.startDate, eKey=meta.specialEnd||meta.endDate;
+  if(sKey){ const s=new Date(sKey+'T00:00:00+08:00'); if(now < s-pad) return false; }
+  if(eKey){ const e=new Date(eKey+'T23:59:59+08:00'); if(now > e) return false; }
+  return true;
+}
+function specialEventVisible(meta, detail){
+  if(detail.bracket) return true;
+  if(!meta.special) return false;
+  if(meta.specialStart||meta.specialEnd||meta.startDate||meta.endDate) return eventWindowActive(meta);
+  return false;
+}
+function bindStandHeaders(host, detail, meta){
+  host.querySelectorAll('[data-stand]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const k=th.dataset.stand;
+      const firstDir=(k==='name')?'asc':'desc';
+      state.standSort=(state.standSort.k===k)?{k,dir:state.standSort.dir==='asc'?'desc':'asc'}:{k,dir:firstDir};
+      host.innerHTML=standingsTable(detail, meta.sport);
+      bindStandHeaders(host, detail, meta);
+    });
+  });
+}
+function bindRankTabs(host, detail, sport, lid){
+  host.querySelectorAll('[data-rank]').forEach(b=>b.addEventListener('click',()=>{
+    state.rankTab=b.dataset.rank;
+    host.innerHTML=rankingsList(detail, sport, lid);
+    bindRankTabs(host, detail, sport, lid);
+  }));
+  host.querySelectorAll('[data-ranksort]').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.ranksort;
+    const firstDir=(k==='name')?'asc':'desc';
+    state.rankSort=(state.rankSort.k===k)?{k,dir:state.rankSort.dir==='desc'?'asc':'desc'}:{k,dir:firstDir};
+    host.innerHTML=rankingsList(detail, sport, lid);
+    bindRankTabs(host, detail, sport, lid);
+  }));
+}
+function bindSummaryStand(host, detail, sport, lid){
+  host.querySelectorAll('[data-stand]').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const k=th.dataset.stand;
+      const firstDir=(k==='name')?'asc':'desc';
+      state.standSort=(state.standSort.k===k)?{k,dir:state.standSort.dir==='asc'?'desc':'asc'}:{k,dir:firstDir};
+      const item=lid?summaryData.find(d=>d.id===lid):null;
+      const cur=item?item.detail:detail;
+      host.innerHTML=standingsTable(cur, sport);
+      bindSummaryStand(host, cur, sport, lid);
+    });
+  });
 }
 function bindStatHeaders(host,g,upcoming){
   host.querySelectorAll('[data-stat]').forEach(th=>{
@@ -2519,7 +3407,8 @@ const PLAY_META = {
   timeout:  { color:'#FBBF24',       icon:'objective' },
   turnover: { color:'var(--lose)',    icon:'miss' },
   block:    { color:'var(--violet)', icon:'save' },
-  violation:{ color:'#FBBF24',       icon:'foul' }
+  violation:{ color:'#FBBF24',       icon:'foul' },
+  other:    { color:'var(--text-3)',  icon:'objective' }
 };
 const flowCollapsed = {};
 const flowOlder = {};
@@ -2534,17 +3423,22 @@ function groupPlays(plays){
 }
 const cardCollapsed = {};
 function playKey(p){ return `${p.period}|${p.clock}|${p.desc}`; }
-const RESULT_LABEL_KEY = { made:'flow.res.made', miss:'flow.res.miss', assist:'flow.res.assist', steal:'flow.res.steal', rebound:'flow.res.rebound', foul:'flow.res.foul', sub:'flow.res.sub', timeout:'flow.res.timeout', turnover:'flow.res.turnover', block:'flow.res.block', violation:'flow.res.violation' };
+const RESULT_LABEL_KEY = { made:'flow.res.made', miss:'flow.res.miss', assist:'flow.res.assist', steal:'flow.res.steal', rebound:'flow.res.rebound', foul:'flow.res.foul', sub:'flow.res.sub', timeout:'flow.res.timeout', turnover:'flow.res.turnover', block:'flow.res.block', violation:'flow.res.violation', other:'flow.res.other' };
 function playRowHtml(g, p){
   const meta = PLAY_META[p.result] || PLAY_META.rebound;
   const clickable = p.detail || p.playerCard;
   const rowCls = `play-row${clickable?' clickable':''}`;
   const label = p.label || t(RESULT_LABEL_KEY[p.result]||'flow.res.rebound');
+  /* 中文界面优先用规则化中文动作描述；英文界面保留 ESPN 原文；团队事件队名占位在此替换 */
+  const isZh = (Store.settings.uiLang||'zh-CN')!=='en';
+  const _teamName = side => g[side] ? tn(g[side].name) : '';
+  let descText = isZh ? (p.descZh || p.desc) : p.desc;
+  if(descText) descText = descText.replace(/§HOME§/g, _teamName('home')).replace(/§AWAY§/g, _teamName('away'));
   /* 桌球：单球分值 + 单杆累计；犯规：获分方总分 */
   let sub = '';
   if (p.ballValue!=null) sub = `<span class="play-sub">+${p.ballValue} · 单杆累计 ${p.running}</span>`;
   if (p.foulTo) sub = `<span class="play-sub">罚分 · ${p.foulTo.side==='home'?esc(g.home.name):esc(g.away.name)} 总分 ${p.foulTo.total}</span>`;
-  if (p.actor && p.actor.name) sub += `<span class="play-sub">${esc(p.actor.num?p.actor.num+'号 ':'')}${esc(p.actor.name)}</span>`;
+  if (p.actor && p.actor.name) sub += `<span class="play-sub">${esc(p.actor.num?p.actor.num+'号 ':'')}${esc(tn(p.actor.name))}</span>`;
   /* 电竞：队员数据折叠卡 */
   let card = '';
   if (p.playerCard){
@@ -2562,7 +3456,7 @@ function playRowHtml(g, p){
   <div class="${rowCls}" ${detailAttr} ${cardAttr}>
     <span class="play-clock num">${esc(p.clock)}</span>
     <span class="play-icon" style="color:${meta.color}">${PLAY_ICONS[meta.icon]}</span>
-    <span class="play-main"><span class="play-desc">${esc(p.desc)}</span>${sub}</span>
+    <span class="play-main"><span class="play-desc">${esc(descText)}</span>${sub}</span>
     <span class="play-tag" style="color:${meta.color};background:${meta.color}1F;border-color:${meta.color}55">${esc(label)}</span>
   </div>${card}`;
 }
@@ -2586,7 +3480,7 @@ function playFlowHtml(g){
       <button class="older-toggle" data-older="${gr.period}" type="button">${olderOpen? t('flow.less') : t('flow.more',{n:older.length})}</button>` : '';
     return `
     <div class="flow-group">
-      <button class="flow-head${courtPeriod===gr.period?' active':''}" data-period="${gr.period}">
+      <button class="flow-head" data-period="${gr.period}">
         <span class="flow-head-title">${cfg.groupTitle(gr.period)}</span>
         <span class="flow-head-meta num">${t('flow.count',{n:gr.items.length})}</span>
         <svg class="flow-arrow ${collapsed?'':'open'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
@@ -2603,10 +3497,9 @@ function bindFlow(host, g){
     head.addEventListener('click', ()=>{
       const period = Number(head.dataset.period);
       flowCollapsed[period] = !flowCollapsed[period];
-      courtPeriod = (courtPeriod===period) ? null : period;
+      /* 动作流折叠/展开不再联动球场缩略图投点；节次筛选改由球场下方下拉控件控制 */
       $('#flow-host').innerHTML = playFlowHtml(g);
       bindFlow(host, g);
-      refreshCourt(host, g);
     });
   });
   host.querySelectorAll('[data-older]').forEach(btn=>{
@@ -2657,6 +3550,7 @@ async function renderGame(gameId){
   const host = $('#game-detail');
   if (!g){ host.innerHTML = `<div class="empty-tip">${esc(t('league.noData'))}</div>`; return; }
   pushHistory('game', gameId, `${g.home.name} vs ${g.away.name}`);
+  recordRef(g);
   /* 进入新比赛时重置折叠状态，避免上一场的展开/收起状态串场 */
   Object.keys(flowCollapsed).forEach(k=>delete flowCollapsed[k]);
   Object.keys(flowOlder).forEach(k=>delete flowOlder[k]);
@@ -2667,9 +3561,11 @@ async function renderGame(gameId){
   const periods = groupPlays(g.plays).map(x=>x.period);
   periods.forEach((p,i)=>{ flowCollapsed[p] = i!==0; });
   const done = g.status==='done';
+  const bjTime = g.localTime || (String(g.utc8||'').match(/\d{1,2}:\d{2}/)||[])[0] || '';
+  const localTzHtml = (g.localTz==='Asia/Shanghai') ? '' : locTimeHtml(g);
   const clockText = upcoming
-    ? `${esc(gameDateLabel(g))} 开赛 北京 ${esc(g.utc8)}${g.localTime?`（当地 ${esc(g.localTime)}）`:''}`
-    : done ? '全场结束' : `${esc(g.quarter)} ${esc(g.clock)}`;
+    ? `${esc(gameDateLabel(g))} 开赛 北京 ${esc(bjTime)}${localTzHtml?`（${localTzHtml}）`:''}`
+    : done ? '全场结束' : `${esc(g.quarter)} · ${esc(g.clock)}`;
 
   const cfg = SPORT_CFG[g.sport] || SPORT_CFG.basketball;
   const statsHtml = statsHtmlFor(g, upcoming);
@@ -2681,12 +3577,31 @@ async function renderGame(gameId){
 
   const courtStat = courtShotStat(g, courtPeriod);
   const courtPeriodLabel = courtPeriod==null ? t('court.all') : (SPORT_CFG[g.sport]||SPORT_CFG.basketball).groupTitle(courtPeriod);
+  const courtPeriods = [...new Set((g.shots||[]).map(s=>Number(s.period)).filter(Boolean))].sort((a,b)=>a-b);
+  /* 篮球详情顶部信息块：队标 / 比分 / 队名，场地缩略图下移到此块之下 */
+  const noScore = !g.score || g.score.home==null || g.score.away==null;
+  const headScore = (upcoming || noScore) ? `<span class="vs">VS</span>` : `<span class="num">${g.score.home} : ${g.score.away}</span>`;
+  const homeFid = teamFollowId(g.home.name), awayFid = teamFollowId(g.away.name);
+  const homeStar = `<button class="star-btn ${isFollowing('team',homeFid)?'active':''}" data-follow-team="home" title="关注球队" type="button">★</button>`;
+  const awayStar = `<button class="star-btn ${isFollowing('team',awayFid)?'active':''}" data-follow-team="away" title="关注球队" type="button">★</button>`;
+  const headBlock = (g.sport==='basketball' && !simple) ? `
+    <div class="det-head">
+      <div class="dh-teams">
+        <div class="team home">${logoHtml(g.home)}<div class="team-meta"><span class="team-line">${badgeHtml(g.home.abbr,g.home.color)}${teamNameHtml(g.home.name)}</span>${homeStar}</div></div>
+        <div class="dh-score">${headScore}</div>
+        <div class="team away"><div class="team-meta"><span class="team-line">${badgeHtml(g.away.abbr,g.away.color)}${teamNameHtml(g.away.name)}</span>${awayStar}</div>${logoHtml(g.away)}</div>
+      </div>
+      <div class="dh-meta"><span class="gc-status ${st.cls}">${st.text}</span></div>
+    </div>` : '';
   const courtBlock = simple ? '' : `
     <div class="court-card">
       <div id="court-host">${courtSvg(g, courtPeriod)}</div>
       <div class="court-meta">
         <span class="clock num">${clockText}</span>
-        <span class="court-period num">${esc(courtPeriodLabel)}</span>
+        <select id="court-period-select" class="court-select" aria-label="${t('court.all')}">
+          <option value="" ${courtPeriod==null?'selected':''}>${t('court.all')}</option>
+          ${courtPeriods.map(p=>`<option value="${p}" ${courtPeriod===p?'selected':''}>${cfg.groupTitle(p)}</option>`).join('')}
+        </select>
         <span class="court-hit num">${t('court.shotStat',{made:courtStat.made,miss:courtStat.miss})}</span>
         ${done?'':`<span class="eta">${esc(g.eta)}</span>`}
       </div>
@@ -2699,7 +3614,7 @@ async function renderGame(gameId){
   const formBlock = (simple || isTennis) ? '' : `
     <div class="detail-block">
       <h3>${t('detail.form')}</h3>
-      <div class="vs-grid">${teamPanel(g.home,'home')}${teamPanel(g.away,'away')}</div>
+      <div class="vs-grid">${teamPanel(g.home,'home',g.sport!=='basketball')}${teamPanel(g.away,'away',g.sport!=='basketball')}</div>
     </div>`;
   const rosterBlockHtml = simple ? '' : `
     <div class="detail-block">
@@ -2718,25 +3633,42 @@ async function renderGame(gameId){
         <div><span class="si-label">${t('detail.status')}</span><span>${st.text}</span></div>
         <div><span class="si-label">${t('detail.date')}</span><span class="num">${esc(gameDateLabel(g))}</span></div>
         <div><span class="si-label">${t('detail.beijing')}</span><span class="num">${esc(g.utc8)}</span></div>
-        ${g.localTime?`<div><span class="si-label">${t('detail.localTime')}</span><span class="num">${esc(g.localTime)}</span></div>`:''}
+        ${g.localTime?`<div><span class="si-label">${t('detail.localTime')}</span><span>${locTimeHtml(g)}</span></div>`:''}
         ${g.score?`<div><span class="si-label">${t('detail.result')}</span><span class="num">${g.score.home} : ${g.score.away}</span></div>`:''}
       </div>
     </div>` : '';
 
   host.innerHTML = `
     <button class="back-bar back" data-back>${t('league.back')}</button>
+    ${headBlock}
     ${courtBlock}
     ${flowBlock}
     ${formBlock}
     ${rosterBlockHtml}
     ${statsBlock}
+    ${predictBlock(g)}
     ${simpleBlock}
     <div id="detail-mask" class="detail-mask hidden"></div>`;
 
   host.querySelector('[data-back]').addEventListener('click', ()=>{ location.hash = '#/'; });
   if (!simple && !isTennis) bindFlow(host, g);
+  const periodSel = host.querySelector('#court-period-select');
+  if (periodSel) periodSel.addEventListener('change', ()=>{
+    courtPeriod = periodSel.value ? Number(periodSel.value) : null;
+    refreshCourt(host, g);
+  });
   if (!simple) renderRoster(host, g, upcoming, g.sport);
   bindStatHeaders(host,g,upcoming);
+  host.querySelectorAll('[data-follow-team]').forEach(b=>b.addEventListener('click',()=>{
+    const side=b.dataset.followTeam, fid=side==='home'?homeFid:awayFid;
+    toggleFollow('team', fid, g[side].name, g.sport); renderGame(gameId);
+  }));
+  host.querySelectorAll('[data-follow-player]').forEach(b=>b.addEventListener('click',()=>{
+    toggleFollow('player', playerFollowId(b.dataset.team,b.dataset.name), b.dataset.name, b.dataset.team);
+    renderRoster(host,g,upcoming,g.sport);
+  }));
+  const prun=$('#predict-run'); if(prun) prun.addEventListener('click',()=>{ runPredict(g); renderGame(gameId); });
+  const pr=$('#predict-reset'); if(pr) pr.addEventListener('click',()=>{ resetPredict(g); renderGame(gameId); });
   if (g.status === 'live'){
     const sec = Math.max(20, Math.min(40, Store.settings.pollInterval)) * 1000;
     pollTimer = setInterval(async ()=>{
@@ -2751,6 +3683,15 @@ async function renderGame(gameId){
 }
 
 /* ---------- 关注与浏览历史（本机持久化） ---------- */
+/* 关注：名称归一化与匹配（跨源 teamId 体系不一致，按宽松队名匹配） */
+function followNorm(n){ return String(n||'').replace(/\s+/g,'').replace(/(俱乐部|篮球队|男篮|女篮|队)$/,''); }
+function teamFollowId(name){ return followNorm(name); }
+function playerFollowId(team, name){ return followNorm(team)+'|'+followNorm(name); }
+function followNameMatch(a, b){
+  const x = followNorm(a), y = followNorm(b);
+  return !!x && !!y && (x.includes(y) || y.includes(x));
+}
+function followedTeams(){ return Store.follows.filter(f=>f.type==='team'); }
 function isFollowing(type, id){ return Store.follows.some(f=>f.type===type && f.id===id); }
 function toggleFollow(type, id, name, sub){
   let list = Store.follows;
@@ -2767,7 +3708,8 @@ function pushHistory(kind, id, name){
 function clearHistory(){ Store.history = []; }
 
 /* ---------- 我的视图 ---------- */
-function renderMe(){
+let meCollapsed = {};
+async function renderMe(){
   const host = $('#me-detail');
   const follows = Store.follows.slice().sort((a,b)=>b.ts-a.ts);
   const history = Store.history.slice();
@@ -2784,7 +3726,7 @@ function renderMe(){
       <a class="mini-btn" href="${href}">${t('me.view')}</a>
       <button class="mini-btn danger" data-unfollow="${f.type}:${f.id}">${t('me.unfollow')}</button>
     </div>`;
-  }).join('') : `<div class="empty-tip">${esc(t('me.emptyFollow'))}</div>`;
+  }).join('') : `<div class="empty-tip">${esc(t('me.emptyFollowTeams'))}</div>`;
 
   const histRows = history.length ? history.map(h=>{
     const href = h.kind==='game' ? `#/game/${h.id}` : `#/league/${h.id}`;
@@ -2805,9 +3747,13 @@ function renderMe(){
       <div class="me-avatar">${t('me.avatar')}</div>
       <div><div class="m-name">${t('me.guest')}</div><div class="m-sub">${t('me.guestSub')}</div></div>
     </div>
-    <div class="me-section">
-      <h3>${t('me.follows',{n:follows.length})}</h3>
-      <div class="me-list">${followRows}</div>
+    <div class="${meCollapsed.teams?'me-section collapsed':'me-section'}" id="sec-teams">
+      <h3 class="f-toggle" data-me-toggle="teams">${t('me.fTeams',{n:follows.length})} <span class="f-arrow">▾</span></h3>
+      <div class="me-list" id="me-follow-teams">${followRows}</div>
+    </div>
+    <div class="${meCollapsed.games?'me-section collapsed':'me-section'}" id="sec-games">
+      <h3 class="f-toggle" data-me-toggle="games">${t('me.fGames',{n:0})} <span class="f-arrow">▾</span></h3>
+      <div class="me-list" id="me-follow-games"><div class="empty-tip">${esc(t('me.emptyFollowGames'))}</div></div>
     </div>
     <div class="me-section">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -2838,12 +3784,37 @@ function renderMe(){
       </div>
     </div>`;
 
+  host.querySelectorAll('[data-me-toggle]').forEach(h=>h.addEventListener('click',()=>{
+    const k=h.dataset.meToggle; meCollapsed[k]=!meCollapsed[k];
+    const sec=$('#sec-'+k); if(sec) sec.classList.toggle('collapsed', !!meCollapsed[k]);
+  }));
   host.querySelectorAll('[data-unfollow]').forEach(b=>b.addEventListener('click',()=>{
     const [type,id]=b.dataset.unfollow.split(':'); toggleFollow(type,id,''); renderMe();
   }));
   const ch=$('#clear-history'); if(ch) ch.addEventListener('click',()=>{ clearHistory(); renderMe(); toast(t('toast.historyCleared')); });
   const cc=$('#clear-cache'); if(cc) cc.addEventListener('click',()=>{ cacheClear(); renderMe(); toast(t('toast.cacheCleared')); });
   $('#me-open-settings').addEventListener('click', openSettings);
+
+  /* 派生赛程：关注球队的未开赛场次自动归入，只读展示 */
+  const teams = followedTeams();
+  if (teams.length){
+    SportsProvider.getGames({}).then(all=>{
+      all = all||[];
+      if (!all.length) return; /* 数据源未就绪：保留初始空态，避免空结果固化 */
+      const hit = all.filter(g=>g.status==='upcoming' &&
+        teams.some(t=>followNameMatch(g.home.name,t.name)||followNameMatch(g.away.name,t.name)));
+      const box=$('#me-follow-games'); if(!box) return;
+      box.innerHTML = hit.length ? hit.map(g=>`
+        <div class="history-item">
+          <div class="h-main">
+            <div class="h-name">${esc(g.home.name)} vs ${esc(g.away.name)}</div>
+            <div class="h-meta">${esc(schedBjText(g))}</div>
+          </div>
+          <a class="mini-btn" href="#/game/${g.id}">${t('me.open')}</a>
+        </div>`).join('') : `<div class="empty-tip">${esc(t('me.emptyFollowGames'))}</div>`;
+      const h3=$('#sec-games h3'); if(h3) h3.innerHTML=`${t('me.fGames',{n:hit.length})} <span class="f-arrow">▾</span>`;
+    }).catch(()=>{});
+  }
 }
 
 /* ---------- 设置 / 数据源弹窗 ---------- */
@@ -2860,10 +3831,6 @@ function sourceRow(x){
     <input class="form-input" style="margin:6px 0" data-src-field="url" data-id="${x.id}" placeholder="${esc(t('src.url'))}" value="${esc(x.url||'')}">
     <div class="form-row" style="padding:6px 0;gap:6px">
       <select class="form-input" data-src-field="leagueId" data-id="${x.id}">${leagueOpts}</select>
-      <select class="form-input" data-src-field="role" data-id="${x.id}">
-        <option value="primary" ${x.role==='primary'?'selected':''}>${t('src.primary')}</option>
-        <option value="backup"  ${x.role==='backup'?'selected':''}>${t('src.backup')}</option>
-      </select>
     </div>
     <div class="form-row" style="padding:6px 0">
       <input class="form-input" data-src-field="user" data-id="${x.id}" placeholder="${esc(t('src.user'))}" value="${esc(x.user||'')}">
@@ -2874,6 +3841,29 @@ function sourceRow(x){
 }
 let settingsTab='general';
 let sourceDraft=null;
+let prefDraft=null;
+/* 取数候选 = 内置适配器 + 台账已启用站点（匹配本联赛或通用站点）；台账站点后续接入适配器后即可被驱动取数 */
+function sourceCandidates(lid){
+  const built = Object.keys(SOURCE_ADAPTERS).map(k=>({ key:k, label:SOURCE_LABEL[k] }));
+  const custom = (sourceDraft||[])
+    .filter(x=>x.enabled && (!x.leagueId || x.leagueId===lid))
+    .map(x=>({ key:x.id, label:(x.name||x.url||x.id)+'（台账）' }));
+  return built.concat(custom);
+}
+function prefRow(lid){
+  const l = LEAGUES[lid];
+  const cur = prefDraft[lid] || { primary:'', fallbacks:[] };
+  const cands = sourceCandidates(lid);
+  const primaryOpts = [`<option value="">${esc(t('settings.prefAuto'))}</option>`]
+    .concat(cands.map(c=>`<option value="${c.key}" ${cur.primary===c.key?'selected':''}>${esc(c.label)}</option>`)).join('');
+  const fbBoxes = cands.filter(c=>c.key!==cur.primary).map(c=>`
+    <label class="pref-fb"><input type="checkbox" data-pref-fb="${lid}" data-src="${c.key}" ${cur.fallbacks.includes(c.key)?'checked':''}> ${esc(c.label)}</label>`).join('');
+  return `<div class="pref-row" data-pref-lid="${lid}">
+    <div class="f-label" style="min-width:72px">${esc(l.name)}</div>
+    <select class="form-input" data-pref-primary="${lid}" style="min-width:130px">${primaryOpts}</select>
+    <div class="pref-fbs">${fbBoxes}</div>
+  </div>`;
+}
 function renderSettings(){
   const s = Store.settings;
   const draft = sourceDraft || [];
@@ -2954,6 +3944,12 @@ function renderSettings(){
     </div>`;
   const sourcesHtml = `
     <div class="set-group">
+      <div class="g-title">${t('settings.prefTitle')}</div>
+      <div class="cache-meta">${t('settings.prefHint')}</div>
+      <div id="pref-list">${Object.values(LEAGUES).map(l=>prefRow(l.id)).join('')}</div>
+      <button class="mini-btn" id="pref-reset" style="margin-top:10px">${t('settings.prefReset')}</button>
+    </div>
+    <div class="set-group">
       <div class="g-title">${t('settings.sources')}</div>
       <div class="cache-meta">${t('settings.sourcesHint')}</div>
       <div id="source-list">${draft.map(sourceRow).join('')}</div>
@@ -3009,15 +4005,39 @@ function bindSettings(body){
     const x=sourceDraft.find(o=>o.id===inp.dataset.id);
     if(x){ x[inp.dataset.srcField]=inp.value; }
   }));
+  /* 按联赛主源 / 兜底草稿：主源切换后从兜底列表剔除自身 */
+  body.querySelectorAll('[data-pref-primary]').forEach(sel=>sel.addEventListener('change',()=>{
+    const lid=sel.dataset.prefPrimary;
+    const cur=prefDraft[lid]||{ primary:'', fallbacks:[] };
+    cur.primary=sel.value;
+    cur.fallbacks=cur.fallbacks.filter(x=>x!==sel.value);
+    prefDraft[lid]=cur; renderSettings();
+  }));
+  body.querySelectorAll('[data-pref-fb]').forEach(cb=>cb.addEventListener('change',()=>{
+    const lid=cb.dataset.prefFb, src=cb.dataset.src;
+    const cur=prefDraft[lid]||{ primary:'', fallbacks:[] };
+    cur.fallbacks=cb.checked?Array.from(new Set(cur.fallbacks.concat([src]))):cur.fallbacks.filter(x=>x!==src);
+    prefDraft[lid]=cur;
+  }));
+  const prefReset=$('#pref-reset'); if(prefReset) prefReset.addEventListener('click',()=>{ prefDraft={}; renderSettings(); });
   const add=$('#add-source'); if(add) add.addEventListener('click',()=>{
-    sourceDraft=sourceDraft.concat([{ id:'src-'+Date.now(), name:'', url:'', type:'free', leagueId:'', role:'primary', user:'', pass:'', enabled:true, note:'自定义采集站点' }]);
+    sourceDraft=sourceDraft.concat([{ id:'src-'+Date.now(), name:'', url:'', type:'free', leagueId:'', user:'', pass:'', enabled:true, note:'自定义采集站点' }]);
     renderSettings();
   });
   const save=$('#src-save'); if(save) save.addEventListener('click',()=>{
-    Store.sources=sourceDraft.map(x=>({...x})); toast(t('src.saved'));
+    Store.sources=sourceDraft.map(x=>({...x}));
+    const prefs={};
+    Object.keys(prefDraft||{}).forEach(lid=>{
+      const p=prefDraft[lid];
+      if(p && (p.primary || (p.fallbacks&&p.fallbacks.length))) prefs[lid]={ primary:p.primary||'', fallbacks:p.fallbacks||[] };
+    });
+    const s=Store.settings; s.sourcePrefs=prefs; Store.settings=s;
+    toast(t('src.saved'));
   });
   const discard=$('#src-discard'); if(discard) discard.addEventListener('click',()=>{
-    sourceDraft=Store.sources.map(x=>({...x})); renderSettings();
+    sourceDraft=Store.sources.map(x=>({...x}));
+    prefDraft=JSON.parse(JSON.stringify(Store.settings.sourcePrefs||{}));
+    renderSettings();
   });
   const cc=$('#settings-clear-cache'); if(cc) cc.addEventListener('click',()=>{ cacheClear(); renderSettings(); toast(t('toast.cacheCleared')); });
   body.querySelectorAll('[data-color]').forEach(sw=>sw.addEventListener('click',()=>applyCustomColor(sw.dataset.color)));
@@ -3026,6 +4046,7 @@ function bindSettings(body){
 }
 function openSettings(){
   sourceDraft=Store.sources.map(x=>({...x}));
+  prefDraft=JSON.parse(JSON.stringify(Store.settings.sourcePrefs||{}));
   settingsTab='general';
   renderSettings();
   $('#settings-mask').classList.remove('hidden');
@@ -3101,8 +4122,20 @@ function router(){
   } else {
     $('#view-home').classList.add('active'); renderHome();
   }
+  /* 「我的」页隐藏广告位，其它视图保留测试卡片 */
+  const adBar = $('#ad-bar');
+  if (adBar) adBar.style.display = parts[0]==='me' ? 'none' : '';
+  if (parts[0] !== 'me') scheduleAdFade();
   applyStaticI18n();
   window.scrollTo(0,0);
+}
+/* 测试广告卡：每次切换视图后常亮 8 秒，随后淡化至原透明度的 20% */
+let adFadeTimer = null;
+function scheduleAdFade(){
+  const s = $('#ad-slot'); if(!s) return;
+  s.classList.remove('ad-dim');
+  if (adFadeTimer) clearTimeout(adFadeTimer);
+  adFadeTimer = setTimeout(()=>s.classList.add('ad-dim'), 8000);
 }
 
 $('#ad-slot').addEventListener('click', ()=>{

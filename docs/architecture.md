@@ -1,4 +1,4 @@
-# 三端架构与适配层说明（v0.1.0 基线）
+# 三端架构与适配层说明（v0.2.0）
 
 ## 整体架构
 
@@ -26,7 +26,7 @@
 
 ## 适配层与数据源
 
-| Adapter | 数据源 | 覆盖范围（0.1.0） | 取数方式 |
+| Adapter | 数据源 | 覆盖范围（0.2.0） | 取数方式 |
 | --- | --- | --- | --- |
 | EspnAdapter | ESPN 公开 API | NBA、WNBA、NCAA 等可直连项目 | 浏览器/WebView 直连 |
 | ProxyAdapter | 本地代理回退 | WCBA 等旧官网 HTML/JSON | 经 `127.0.0.1:8787` 转发 |
@@ -40,7 +40,7 @@
 
 - 零第三方依赖，Node 18+ 内置 `http`/`fetch`；默认端口 `8787`，可用 `PROXY_PORT` 覆盖。
 - 作用：代为请求不开放 CORS 的国内公开源，解析成前端统一结构后返回，并补 `Access-Control-Allow-Origin: *`。
-- 端点：`/proxy/<league>/games|league`（旧官网回退）、`/proxy/tencent/games|league|game`（腾讯转发）、`/proxy/raw?url=`（通用备用）。
+- 端点：`/proxy/games/all`（赛程聚合，内部并发多源去重）、`/proxy/<league>/games|league`（旧官网回退）、`/proxy/tencent/games|league|game`（腾讯转发）、`/proxy/raw?url=`（通用备用）。
 - 模块两用：直接 `node server.js` 启动；被 Electron 主进程 `require` 时导出 `startProxy(port)`，不自行监听。
 
 ## PC 端（Electron）
@@ -63,7 +63,7 @@
 | 榜单类 | 积分榜、球员榜、近 5 场战绩、排名 | 每轮赛后或每日更新 |
 | 基础资料 | 名单、位置、教练、译名 | 有变动即更新 |
 
-## 当前限制（0.1.0 基线）
+## 当前限制（0.2.0）
 
 - 数据均来自公开免费源；付费/登录态内容、视频回放不抓取。
 - 日职联、WTA、美网/温网/法网的腾讯赛事 ID 待有赛程时补录，当前空态。

@@ -21,6 +21,7 @@
 
 const http = require('http');
 const { URL } = require('url');
+const crypto = require('crypto');
 
 const PORT = Number(process.env.PROXY_PORT || 8787);
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.6478.234 Safari/537.36';
@@ -28,18 +29,36 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 /* 上游公开端点（如需切换赛季/赛事，只改这里） */
 const UPSTREAM = {
   cbaSchedule: 'https://server.cbaleague.com/home/home_schedules',
+  cbaData:     'https://data-server.cbaleague.com',
   wcbaToday:   'https://www.cba.net.cn/datahub/cbamatch/home/todaymatches?competitionId=56',
   wcbaRank:    'https://www.cba.net.cn/datahub/cbamatch/home/matchoutrank?competitionId=56&seasonId=2286',
   txFeeds:     'https://matchweb.sports.qq.com/feeds/type/list',
   txStat:      'https://matchweb.sports.qq.com/kbs/matchStat',
   txDetail:    'https://matchweb.sports.qq.com/kbs/matchDetail',
-  txRank:       'https://matchweb.sports.qq.com/team/rank'
+  txRank:       'https://matchweb.sports.qq.com/team/rank',
+  txRankings:   'https://matchweb.sports.qq.com/match/api/v2/statistic/rankings',
+  dqData:       'https://www.dongqiudi.com/data',
+  zbRank:       'https://data.zhibo8.cc/manage/public/app.php?_url=/basketball/paihang',
+  zbTop:        'https://data.zhibo8.cc/manage/public/app.php?_url=/nba/league_top_data',
+  wstMatches:   'https://matches.snooker.web.gc.wstservices.co.uk/v2',
+  wstRankings:  'https://rankings.snooker.web.gc.wstservices.co.uk/v2',
+  wstImg:       'https://images.gc.wstservices.co.uk/fit-in/700x700/'
 };
+
+/* 懂球帝联赛 cid 映射（前端 leagueId → 站点 cid）；仅本轮已验证可解析的足球联赛 */
+const DQ_CID = {
+  epl: 4, laliga: 3, seriea: 9, bundes: 5, csl: 43, ucl: 6, worldcup: 61
+};
+/* 懂球帝球员榜 type → 前端排名 key（仅接已验证有效值；其余 type 站点回退射手榜，暂不接） */
+const DQ_PERSON_TYPE = { goals: 'goals', assists: 'assists', shots: 'shots' };
+/* 直播吧篮球排行/球员榜覆盖的联赛 */
+const ZB_BASKET = { nba: 1 };
 
 /* 腾讯体育赛事映射：前端 leagueId → 腾讯 competitionId（mid 前缀）。
  * cid 为空表示该赛事当前赛季/档期在腾讯侧暂无公开赛程流，先留空待补；
  * sport 与前端 LEAGUES 对齐：basketball / football / tennis。 */
 const TENCENT_LEAGUES = {
+  nba:      { cid: '100000',  sport: 'basketball' },
   cba:      { cid: '100009',  sport: 'basketball' },
   epl:      { cid: '10082',   sport: 'football' },
   laliga:   { cid: '10120',   sport: 'football' },
@@ -60,15 +79,22 @@ const CACHE_TTL = 30 * 1000;
 const cache = new Map();
 
 async function fetchJson(url, referer) {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': UA,
-      'Referer': referer || 'https://www.cba.net.cn/',
-      'Accept': 'application/json, text/plain, */*'
-    }
-  });
-  if (!res.ok) throw new Error('upstream HTTP ' + res.status);
-  return res.json();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 60000);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: {
+        'User-Agent': UA,
+        'Referer': referer || 'https://www.cba.net.cn/',
+        'Accept': 'application/json, text/plain, */*'
+      }
+    });
+    if (!res.ok) throw new Error('upstream HTTP ' + res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function cached(key, ttl, loader) {
@@ -138,9 +164,10 @@ function mapCbaGame(row) {
 
 function cbaScheduleRows(games) {
   return games.map(g => ({
-    date: g.dateKey,
-    home: g.home.name,
-    away: g.away.name,
+    date: g.dateKey, dateRaw: g.dateRaw || g.dateKey || '', utc8: g.utc8 || '',
+    home: g.home.name, homeEn: '',
+    away: g.away.name, awayEn: '',
+    city: g.city || '',
     score: g.status === 'upcoming' ? '—' : `${g.score.home == null ? '—' : g.score.home} : ${g.score.away == null ? '—' : g.score.away}`,
     status: g.status
   }));
@@ -234,9 +261,10 @@ function mapWcbaGame(g) {
 
 function wcbaScheduleRows(games) {
   return games.map(g => ({
-    date: g.dateKey,
-    home: g.home.name,
-    away: g.away.name,
+    date: g.dateKey, dateRaw: g.dateRaw || g.dateKey || '', utc8: g.utc8 || '',
+    home: g.home.name, homeEn: '',
+    away: g.away.name, awayEn: '',
+    city: g.city || '',
     score: g.status === 'upcoming' ? '—' : `${g.score.home == null ? '—' : g.score.home} : ${g.score.away == null ? '—' : g.score.away}`,
     status: g.status
   }));
@@ -368,17 +396,22 @@ function txBasketballRoster(sideName, sideId, sideArr) {
   (sideArr || []).forEach(item => {
     if (!item || !Array.isArray(item.row)) return;
     const r = item.row;
+    const name = String(r[1] || '—');
+    const isTotal = /统计|合计|总分|全队|Total/i.test(name);
     rows.push({
       id: String(item.playerId || ''),
       num: String(r[0] || ''),
-      name: String(r[1] || '—'),
+      name,
       pos: String(item.pos || ''),
       starter: item.onCrt === '1',
       didNotPlay: item.onCrt !== '1',
+      isTotal,
       team: sideName,
       teamId: String(sideId || ''),
       min: String(r[2] || '—'), pts: String(r[3] || '—'), reb: String(r[4] || '—'),
       ast: String(r[5] || '—'), stl: String(r[9] || '—'), blk: String(r[10] || '—'),
+      /* 失误列位待完场报文按 head 校准；效率由前端按 PIR 估算，不在此输出 */
+      tov: '—',
       logo: secureUrl(item.pic)
     });
   });
@@ -454,40 +487,390 @@ function txRankStandings(data, sport) {
   });
 }
 
+/* 球员榜分组 code → 前端榜单 key（与 SPORT_CFG.rankTabs 对齐） */
+const TX_RANK_MAP = {
+  basketball: { point:'pts', assist:'ast', rebound:'reb', steal:'stl', block:'blk' },
+  football:   { goals:'goals' },
+  tennis:     {}
+};
+/* 解析腾讯 statistic/rankings：返回 { pts:[{name,team,val}], ... }，仅保留有数据的榜 */
+function txPlayerRankings(data, sport) {
+  const map = TX_RANK_MAP[sport] || {};
+  const groups = (data && data.groups) || [];
+  const out = {};
+  groups.forEach(g => {
+    const k = map[g.code]; if (!k) return;
+    const rows = ((g.tables || [{}])[0] || {}).rows || [];
+    out[k] = rows.map(r => {
+      const v = {};
+      (r.values || []).forEach(it => { v[it.code] = it.value; });
+      const p = v.player || {}, t = v.team || {};
+      const name = p.fullCnName || p.cnName || p.enName || '—';
+      const en = p.fullEnName || p.enName || '';
+      const team = t.cnName || '';
+      const val = v.rankValue != null ? String(v.rankValue) : '—';
+      return { name, en, team, val };
+    }).filter(x => x.name && x.name !== '—');
+  });
+  return out;
+}
+
 async function txGames(lid) {
   const cfg = TENCENT_LEAGUES[lid];
   if (!cfg || !cfg.cid) return [];
-  const all = [];
-  for (const offset of [0, 1]) {
-    const date = txBjDate(offset);
+  if (lid === 'nba') return []; /* NBA 赛程走 ESPN，腾讯侧仅用于补球员榜 */
+  const dates = [0, 1, 2].map(txBjDate);
+  const settled = await Promise.allSettled(dates.map(async date => {
     const data = await cached('tx:feeds:' + cfg.cid + ':' + date, CACHE_TTL, async () => {
       return fetchTencent(UPSTREAM.txFeeds + '?indexID=' + date + '&type=1500&indexKey=' + cfg.cid);
     });
-    const list = ((data && data.info && data.info.type1500) || {}).list || [];
-    list.forEach(g => all.push(mapTencentGame(g.matchInfo, lid, cfg)));
-  }
+    return ((data && data.info && data.info.type1500) || {}).list || [];
+  }));
+  const all = [];
+  settled.forEach(r => { (r.value || []).forEach(g => all.push(mapTencentGame(g.matchInfo, lid, cfg))); });
   const seen = new Set();
   return all.filter(g => { if (!g || seen.has(g.id)) return false; seen.add(g.id); return true; });
 }
 
 async function txLeague(lid) {
   const cfg = TENCENT_LEAGUES[lid];
-  if (!cfg) return { standings: [], schedule: [] };
-  let standings = [];
+  if (!cfg) return { standings: [], schedule: [], rankings: {} };
+  let standings = [], rankings = {};
   if (cfg.cid) {
     try {
       const data = await cached('tx:rank:' + cfg.cid, CACHE_TTL, async () =>
         fetchTencent(UPSTREAM.txRank + '?competitionId=' + cfg.cid));
       standings = txRankStandings(data || {}, cfg.sport);
     } catch (e) { standings = []; }
+    try {
+      const rk = await cached('tx:rankings:' + cfg.cid, CACHE_TTL, async () =>
+        fetchTencent(UPSTREAM.txRankings + '?competition_id=' + cfg.cid + '&season_id=&season_type=&type=2&scene=pc'));
+      rankings = txPlayerRankings(rk || {}, cfg.sport);
+    } catch (e) { rankings = {}; }
   }
   const games = await txGames(lid);
   const schedule = games.map(g => ({
-    date: g.dateKey, home: g.home.name, away: g.away.name,
+    date: g.dateKey, dateRaw: g.dateRaw || g.dateKey || '', utc8: g.utc8 || '',
+    home: g.home.name, homeEn: '', away: g.away.name, awayEn: '', city: g.city || '',
     score: g.status === 'upcoming' ? '—' : `${g.score.home == null ? '—' : g.score.home} : ${g.score.away == null ? '—' : g.score.away}`,
     status: g.status
   }));
-  return { standings, schedule };
+  return { standings, schedule, rankings };
+}
+
+/* ----------------------------- 懂球帝（SSR HTML 解析） ----------------------------- */
+async function fetchHtml(url, referer) {
+  const res = await fetch(url, {
+    headers: { 'User-Agent': UA, 'Referer': referer || 'https://www.dongqiudi.com/', 'Accept': 'text/html,*/*' }
+  });
+  if (!res.ok) throw new Error('upstream HTTP ' + res.status);
+  return res.text();
+}
+function htmlText(s) {
+  return String(s || '').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
+}
+/* 足球积分榜行：排名 / 球队 / 赛 / 胜 / 平 / 负 / 进失 / 净胜 / 积分 */
+function dqStandings(html) {
+  const rows = html.match(/<tr[^>]*dp-row[\s\S]*?<\/tr>/g) || [];
+  return rows.map((row, i) => {
+    const rank = (row.match(/dp-td--rank[^>]*>([^<]*)</) || [])[1];
+    const name = (row.match(/dp-td--team[\s\S]*?dp-team-link[^>]*>([^<]*)</) || [])[1];
+    const tds = [...row.matchAll(/dp-td(?:--[\w-]+)?[^>]*>([\s\S]*?)<\/td>/g)].map(m => htmlText(m[1]));
+    const win = tds[3], draw = tds[4], lose = tds[5], pts = tds[8];
+    return {
+      rank: Number(rank) || i + 1,
+      name: htmlText(name) || '—', abbr: '', color: '#22D3EE',
+      win: Number(win) || 0, draw: Number(draw) || 0, lose: Number(lose) || 0,
+      pct: pts || '—', streak: '—'
+    };
+  }).filter(r => r.name && r.name !== '—');
+}
+/* 球员榜行：排名 / 球员 / 球队 / 数值 */
+function dqRankings(html) {
+  const rows = html.match(/<tr[^>]*dp-row[\s\S]*?<\/tr>/g) || [];
+  return rows.map(row => {
+    const name = (row.match(/dp-td--player[\s\S]*?dp-team-link[^>]*>([^<]*)</) || [])[1];
+    const team = (row.match(/dp-td--team[\s\S]*?dp-team-link[^>]*>([^<]*)</) || [])[1];
+    const val = (row.match(/dp-td--count[^>]*>([^<]*)</) || [])[1];
+    return { name: htmlText(name) || '—', en: '', team: htmlText(team) || '', val: htmlText(val) || '—' };
+  }).filter(r => r.name && r.name !== '—');
+}
+async function dqLeague(lid) {
+  const cid = DQ_CID[lid];
+  if (!cid) return { standings: [], schedule: [], rankings: {} };
+  let standings = [];
+  try {
+    const html = await cached('dq:st:' + cid, CACHE_TTL, async () =>
+      fetchHtml(`${UPSTREAM.dqData}?cid=${cid}&tab=standings`));
+    standings = dqStandings(html);
+  } catch (e) { standings = []; }
+  const rankings = {};
+  for (const [k, type] of Object.entries(DQ_PERSON_TYPE)) {
+    try {
+      const html = await cached('dq:rk:' + cid + ':' + type, CACHE_TTL, async () =>
+        fetchHtml(`${UPSTREAM.dqData}?cid=${cid}&tab=person&type=${type}`));
+      const rows = dqRankings(html);
+      if (rows.length) rankings[k] = rows;
+    } catch (e) { /* 该榜暂缺：跳过 */ }
+  }
+  return { standings, schedule: [], rankings };
+}
+
+/* ----------------------------- 直播吧（JSON） ----------------------------- */
+const ZB_RANK_MAP = { '得分': 'pts', '篮板': 'reb', '助攻': 'ast', '抢断': 'stl', '盖帽': 'blk' };
+function zbStandings(j) {
+  const groups = (j.data && j.data.paihang && j.data.paihang.list) || [];
+  const out = [];
+  groups.forEach(g => {
+    (g.teams || []).forEach(t => {
+      out.push({
+        rank: Number(t['排名']) || 0,
+        name: t['球队'] || '—', abbr: '', color: '#22D3EE',
+        win: Number(t['胜']) || 0, lose: Number(t['负']) || 0,
+        pct: (t['胜率'] != null ? t['胜率'] + '%' : '—'),
+        streak: t['连续成绩'] || '—',
+        group: g.displayConference || ''
+      });
+    });
+  });
+  return out;
+}
+function zbRankings(j) {
+  const leader = (j.data && j.data.dailyplayerleader) || {};
+  const data = leader.data || {};
+  const out = {};
+  Object.keys(data).forEach(zh => {
+    const k = ZB_RANK_MAP[zh]; if (!k) return;
+    out[k] = (data[zh] || []).map(p => ({
+      name: p.playerName || '—', en: '', team: p.teamName || '',
+      val: String(p.value == null ? '—' : p.value).replace(/[^\d.\-]/g, '') || '—'
+    })).filter(r => r.name && r.name !== '—');
+  });
+  return out;
+}
+async function zbLeague(lid) {
+  if (!ZB_BASKET[lid]) return { standings: [], schedule: [], rankings: {} };
+  let standings = [], rankings = {};
+  try {
+    const j = await cached('zb:rank', CACHE_TTL, async () =>
+      fetchJson(UPSTREAM.zbRank, 'https://www.zhibo8.cc/'));
+    standings = zbStandings(j);
+  } catch (e) { standings = []; }
+  try {
+    const j = await cached('zb:top', CACHE_TTL, async () =>
+      fetchJson(UPSTREAM.zbTop, 'https://www.zhibo8.cc/'));
+    rankings = zbRankings(j);
+  } catch (e) { rankings = {}; }
+  return { standings, schedule: [], rankings };
+}
+
+/* ----------------------------- 斯诺克（WST 官方源） ----------------------------- */
+function wstName(p){ p=p||{}; const fn=p.customFirstName||p.firstName||''; const sn=p.customSurname||p.surname||''; return [fn,sn].filter(Boolean).join(' '); }
+function wstLogo(p){ const prof=(p&&p.media&&p.media.profile)||''; if(!prof) return ''; const base=/\.(png|jpg|jpeg|webp)$/i.test(prof)?prof:prof+'.png'; return UPSTREAM.wstImg+base; }
+function wstAbbr(p){ const sn=String((p&&p.surname)||'').replace(/[^A-Za-z]/g,''); return sn.slice(0,3).toUpperCase(); }
+/* 英国本地时间(Europe/London) → 北京时间 ISO；简化 DST：4–10 月 BST(UTC+1)，其余 GMT(UTC+0) */
+function wstLondonToBjIso(dt){
+  const m=String(dt||'').match(/(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+  if(!m) return '';
+  const [,y,mo,da,h,mi,s]=m.map(Number);
+  const dst = mo>=4 && mo<=10;
+  const utcMs = Date.UTC(y,mo-1,da,h,mi,s) - (dst?3600e3:0);
+  return new Date(utcMs + 8*3600e3).toISOString();
+}
+function wstStatus(a){
+  const st=String((a&&a.status)||'').toLowerCase();
+  if(/progress|live|playing|ongoing/.test(st)) return 'live';
+  if(/complete|finish|done|won|played/.test(st)) return 'done';
+  return 'upcoming';
+}
+function mapWstMatch(a){
+  if(!a) return null;
+  const at = a.attributes || a;
+  const home=at.homePlayer||{}, away=at.awayPlayer||{};
+  const iso=wstLondonToBjIso(at.startDateTime);
+  const bj=iso?new Date(iso):null;
+  const dateRaw=bj?bj.toISOString().slice(0,10):'';
+  const localTime=bj?String(bj.getUTCHours()).padStart(2,'0')+':'+String(bj.getUTCMinutes()).padStart(2,'0'):'';
+  const status=wstStatus(at);
+  const hs=at.homePlayerScore==null?null:Number(at.homePlayerScore);
+  const as=at.awayPlayerScore==null?null:Number(at.awayPlayerScore);
+  return {
+    id:'snooker-'+a.id, leagueId:'snooker', sport:'billiards', source:'wst',
+    status, dateKey:dateRaw, localTime, localTz:'Asia/Shanghai', utc8:iso,
+    quarter:'', clock:'', eta:'',
+    score: status==='upcoming'?{home:null,away:null}:{home:hs,away:as},
+    home:{id:String(home.playerID||''), name:wstName(home), abbr:wstAbbr(home), color:'#22D3EE', logo:wstLogo(home)},
+    away:{id:String(away.playerID||''), name:wstName(away), abbr:wstAbbr(away), color:'#F472B6', logo:wstLogo(away)},
+    venueCity:'', plays:[], shots:[], roster:[]
+  };
+}
+async function wstGames(){
+  const j=await cached('wst:matches', 3600*1000, async ()=> fetchJson(UPSTREAM.wstMatches, 'https://www.wst.tv/'));
+  return ((j&&j.data)||[]).map(mapWstMatch).filter(Boolean);
+}
+function wstStandings(rank){
+  const pos=(rank&&rank.attributes&&rank.attributes.positions)||[];
+  return pos.map(p=>{ const pl=p.player||{}; return {
+    rank:Number(p.position)||0, name:wstName(pl), abbr:wstAbbr(pl), color:'#22D3EE', logo:wstLogo(pl),
+    win:null, lose:null, pct: p.prizeMoney!=null?('£'+Number(p.prizeMoney).toLocaleString('en-GB')):'—', streak:'—'
+  };});
+}
+async function wstLeague(){
+  const settled = await Promise.allSettled([
+    cached('wst:rankings', 12*3600*1000, async ()=> fetchJson(UPSTREAM.wstRankings, 'https://www.wst.tv/')),
+    wstGames()
+  ]);
+  const rkRaw = settled[0].status==='fulfilled' ? settled[0].value : null;
+  const games = settled[1].status==='fulfilled' ? settled[1].value : [];
+  const ranks=(rkRaw&&rkRaw.data)||[];
+  const world=ranks.find(r=>/world/i.test(r.attributes&&r.attributes.name))||ranks[0];
+  const standings=world?wstStandings(world):[];
+  const schedule=games.map(g=>({date:g.dateKey,dateRaw:g.dateKey,utc8:g.utc8,home:g.home.name,away:g.away.name,city:'',score:g.status==='upcoming'?'—':`${g.score.home} : ${g.score.away}`,status:g.status}));
+  return { standings, schedule, rankings:{} };
+}
+
+/* ----------------------------- CBA 官网数据站（data-server，AES-128-ECB 响应解密） ----------------------------- */
+/* 密钥为前端 JS 公开硬编码；仅取公开免费数据，不带登录态、不触付费内容 */
+const CBA_DATA_KEY = Buffer.from('uVayqL4ONKjFbVzQ', 'utf8');
+const CBA_REFERER = 'https://www.cbaleague.com/';
+
+function cbaDecrypt(raw) {
+  if (raw == null) return null;
+  const text = String(typeof raw === 'string' ? raw : JSON.stringify(raw)).trim();
+  if (!text) return null;
+  try {
+    const d = crypto.createDecipheriv('aes-128-ecb', CBA_DATA_KEY, null);
+    d.setAutoPadding(true);
+    const out = Buffer.concat([d.update(Buffer.from(text, 'base64')), d.final()]).toString('utf8');
+    return JSON.parse(out);
+  } catch (e) {
+    try { return JSON.parse(text); } catch (_) { return null; }
+  }
+}
+
+async function cbaRequest(method, path, body) {
+  const res = await fetch(UPSTREAM.cbaData + path, {
+    method,
+    headers: {
+      'User-Agent': UA,
+      'Referer': CBA_REFERER,
+      'Accept': 'application/json, */*',
+      'Content-Type': 'application/json'
+    },
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!res.ok) throw new Error('cba upstream HTTP ' + res.status);
+  return cbaDecrypt(await res.text());
+}
+
+function cbaNormName(n) {
+  return String(n || '').replace(/\s+/g, '').replace(/(俱乐部|篮球队|男篮|队)$/g, '');
+}
+function cbaNameMatch(a, b) {
+  const x = cbaNormName(a), y = cbaNormName(b);
+  if (!x || !y) return false;
+  return x === y || x.includes(y) || y.includes(x);
+}
+
+async function cbaDay(day) {
+  const j = await cached('cba:day:' + day, CACHE_TTL, async () =>
+    cbaRequest('GET', '/api/schedules/day?day=' + day + '&auto=0'));
+  return Array.isArray(j) ? j : ((j && j.records) || []);
+}
+
+/* 按日期 + 主客队名在官网当天赛程中定位 scheduleId（队名跨源为赞助名/简称，做宽松包含匹配） */
+async function cbaFindSchedule(dateKey, homeName, awayName) {
+  if (!dateKey) return null;
+  const rows = await cbaDay(dateKey);
+  return rows.find(r => cbaNameMatch(homeName, r.homeTeamName) && cbaNameMatch(awayName, r.visitingTeamName)) ||
+         rows.find(r => cbaNameMatch(homeName, r.visitingTeamName) && cbaNameMatch(awayName, r.homeTeamName)) || null;
+}
+
+function cbaPlayResult(text) {
+  if (/暂停/.test(text)) return 'timeout';
+  if (/换人|换下|换上/.test(text)) return 'sub';
+  if (/犯规/.test(text)) return 'foul';
+  if (/失误/.test(text)) return 'turnover';
+  if (/断下|抢断/.test(text)) return 'steal';
+  if (/走步|三秒|24秒|8秒|5秒|出界|违例/.test(text)) return 'violation';
+  if (/助攻/.test(text)) return 'assist';
+  if (/篮板/.test(text)) return 'rebound';
+  if (/不中|未进|打铁/.test(text)) return 'miss';
+  if (/命中|得分|罚中|进球|入网/.test(text)) return 'made';
+  return 'other';
+}
+function cbaClock(rec) {
+  const m = String(rec.minutes == null ? '' : rec.minutes).padStart(2, '0');
+  const s = String(rec.seconds == null ? '' : rec.seconds).padStart(2, '0');
+  return (m && s !== 'NaN') ? m + ':' + s : '';
+}
+function mapCbaPlay(rec, homeColor, awayColor) {
+  const names = Array.isArray(rec.playerCNNames) ? rec.playerCNNames.filter(Boolean) : [];
+  const text = rec.textualFormat || rec.btTextualFormat || '';
+  const side = rec.color === homeColor ? 'home' : rec.color === awayColor ? 'away' : '';
+  return {
+    period: Number(rec.quarterNum) || 1,
+    clock: cbaClock(rec),
+    desc: text, descZh: text,
+    type: 'cba', result: cbaPlayResult(text), side,
+    scoreValue: 0,
+    scoringPlay: /命中|得分|罚中|入网/.test(text),
+    shootingPlay: /跳投|上篮|扣篮|三分|两分|罚球|投篮/.test(text),
+    score: (rec.homeScore != null && rec.visitorScore != null) ? rec.homeScore + ':' + rec.visitorScore : '',
+    actor: names[0] ? { name: names[0], num: '', pos: '' } : null
+  };
+}
+
+async function cbaEvents(sid) {
+  const plays = [];
+  for (let q = 1; q <= 4; q++) {
+    let j;
+    try {
+      j = await cached('cba:ev:' + sid + ':' + q, CACHE_TTL, async () =>
+        cbaRequest('POST', '/api/schedule-eventses/filterPage?startNum=0', { scheduleId: sid, quarterNum: q }));
+    } catch (e) { continue; }
+    const records = (j && j.records) || (Array.isArray(j) ? j : []);
+    (records || []).forEach(r => plays.push(r));
+  }
+  return plays;
+}
+
+function mapCbaPlayer(p, teamName, teamId) {
+  return {
+    id: String(p.playerId || p.id || ''),
+    num: String(p.number || ''),
+    name: p.cnAlias || p.cnName || '—',
+    pos: p.positionDescription || p.position || '',
+    starter: null, didNotPlay: false,
+    team: teamName, teamId: String(teamId || ''),
+    min: '—', pts: '—', reb: '—', ast: '—', stl: '—', blk: '—', tov: '—',
+    logo: secureUrl(p.playerPic)
+  };
+}
+
+async function cbaRoster(sid, homeName, awayName) {
+  const j = await cached('cba:roster:' + sid, CACHE_TTL, async () =>
+    cbaRequest('GET', '/api/schedules/getPlayersByScheduleId/' + sid));
+  const rows = [];
+  (j.hostPlayers || []).forEach(p => rows.push(mapCbaPlayer(p, homeName, p.teamCbaId)));
+  (j.guestPlayers || []).forEach(p => rows.push(mapCbaPlayer(p, awayName, p.teamCbaId)));
+  return rows;
+}
+
+/* 聚合官网单场：动作流 + 兜底名单 + 基本信息校准；无投篮坐标 */
+async function cbaDetail(base) {
+  const sched = await cbaFindSchedule(base.dateKey, base.home.name, base.away.name);
+  if (!sched) return null;
+  const sid = sched.scheduleId;
+  const baseInfo = await cbaRequest('GET', '/api/team-match-datas/getMatchDataReport/baseInfo/' + sid).catch(() => null);
+  const rawEvents = await cbaEvents(sid);
+  const homeColor = (baseInfo && baseInfo.hostColor) || sched.homeColor || base.home.color;
+  const awayColor = (baseInfo && baseInfo.guestColor) || sched.visitingColor || base.away.color;
+  const plays = rawEvents.map(r => mapCbaPlay(r, homeColor, awayColor));
+  let roster = [];
+  try { roster = await cbaRoster(sid, base.home.name, base.away.name); } catch (e) { roster = []; }
+  return { scheduleId: sid, baseInfo, plays, roster, homeColor, awayColor };
 }
 
 /* mid 前缀（腾讯 competitionId）→ 前端 leagueId 反查表，供仅传 mid 的单场详情兜底 */
@@ -510,8 +893,10 @@ async function txGame(lid, mid) {
 
   const ti = stat.teamInfo || {};
   if (!base && ti.leftName) {
+    /* 完场标志以 matchPeriod 为准（2=完场，1=进行中，0=未开始）；liveType 仅作兜底 */
     const mi = {
-      mid, startTime: ti.startTime || '', quarter: '', matchPeriod: ti.liveType === '4' ? '2' : '0',
+      mid, startTime: ti.startTime || '', quarter: ti.quarterDesc || '',
+      matchPeriod: ti.matchPeriod || (ti.liveType === '4' ? '2' : '0'),
       leftId: ti.leftId, leftName: ti.leftName, leftBadge: ti.leftBadge, leftGoal: ti.leftGoal,
       rightId: ti.rightId, rightName: ti.rightName, rightBadge: ti.rightBadge, rightGoal: ti.rightGoal
     };
@@ -527,6 +912,23 @@ async function txGame(lid, mid) {
   } else if (cfg.sport === 'football') {
     roster = txFootballRoster(stat.squard, stat.bench, base.home.name, base.away.name, base.home.id, base.away.id);
     plays = txFootballEvents(stat.footballEvents);
+  }
+
+  /* CBA：腾讯无动作流，回退官网数据站（AES 解密）补中文动作流；名单/队标/队色仅在腾讯缺失时兜底 */
+  if (lid === 'cba') {
+    try {
+      const cd = await cbaDetail(base);
+      if (cd) {
+        if (!plays.length && cd.plays.length) plays = cd.plays;
+        if (!roster.length && cd.roster.length) roster = cd.roster;
+        if (cd.baseInfo) {
+          if (!base.home.logo && cd.baseInfo.hostTeamLogo) base.home.logo = secureUrl(cd.baseInfo.hostTeamLogo);
+          if (!base.away.logo && cd.baseInfo.guestTeamLogo) base.away.logo = secureUrl(cd.baseInfo.guestTeamLogo);
+          if (!base.home.color && cd.baseInfo.hostColor) base.home.color = cd.baseInfo.hostColor;
+          if (!base.away.color && cd.baseInfo.guestColor) base.away.color = cd.baseInfo.guestColor;
+        }
+      }
+    } catch (e) { /* 官网不可用：保留腾讯现状，不阻断 */ }
   }
 
   const homeR = roster.filter(r => r.team === base.home.name);
@@ -567,11 +969,53 @@ async function handleRaw(req, res, parsed) {
   }
 }
 
+/* ESPN 公开 API 白名单透传：浏览器直连 ESPN 存在 SSL/CORS 受限，统一经本地代理出口 */
+const ESPN_HOST = 'site.api.espn.com';
+async function handleEspn(req, res, parsed) {
+  const target = parsed.searchParams.get('url');
+  if (!target) return sendJson(res, 400, { error: 'missing url' });
+  let u;
+  try { u = new URL(target); } catch (e) { return sendJson(res, 400, { error: 'bad url' }); }
+  if (u.hostname !== ESPN_HOST) return sendJson(res, 403, { error: 'espn host only: ' + u.hostname });
+  try {
+    const upstream = await fetch(target, {
+      headers: { 'User-Agent': UA, 'Referer': 'https://www.espn.com/', 'Accept': 'application/json, */*' }
+    });
+    const text = await upstream.text();
+    res.writeHead(upstream.status, {
+      'Content-Type': upstream.headers.get('content-type') || 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.end(text);
+  } catch (e) {
+    sendJson(res, 502, { error: String(e && e.message || e) });
+  }
+}
+
+/* 聚合全量赛程：代理内部并发拉取腾讯各联赛 + CBA/WCBA/斯诺克，一次返回按 id 去重后的 game[]；
+   前端冷启动只发一条请求，避免浏览器对本地代理的多连接并发排队。 */
+async function allGames() {
+  const txLids = Object.keys(TENCENT_LEAGUES).filter(l => l !== 'nba');
+  /* 单源 3s 超时降级：慢联赛/上游不拖住整份聚合，超时按空列表处理 */
+  const withTO = (p, ms) => Promise.race([Promise.resolve(p), new Promise(res => setTimeout(() => res([]), ms))]);
+  const settled = await Promise.allSettled([
+    ...txLids.map(lid => withTO(txGames(lid), 3000)),
+    withTO(wcbaGames(), 3000), withTO(wstGames(), 3000)
+  ]);
+  const out = []; const seen = new Set();
+  settled.forEach(r => {
+    (r.value || []).forEach(g => { if (g && g.id && !seen.has(g.id)) { seen.add(g.id); out.push(g); } });
+  });
+  return out;
+}
+
 const routes = {
   '/proxy/cba/games': () => cbaGames(),
   '/proxy/cba/league': () => cbaLeague(),
   '/proxy/wcba/games': () => wcbaGames(),
-  '/proxy/wcba/league': () => wcbaLeague()
+  '/proxy/wcba/league': () => wcbaLeague(),
+  '/proxy/snooker/games': () => wstGames(),
+  '/proxy/snooker/league': () => wstLeague()
 };
 
 const server = http.createServer(async (req, res) => {
@@ -586,6 +1030,13 @@ const server = http.createServer(async (req, res) => {
   }
   if (parsed.pathname === '/') return sendJson(res, 200, { ok: true, service: 'sports-hub-proxy', time: new Date().toISOString() });
   if (parsed.pathname === '/proxy/raw') return handleRaw(req, res, parsed);
+  if (parsed.pathname === '/proxy/espn') return handleEspn(req, res, parsed);
+
+  /* 聚合全量赛程：一条请求返回代理侧全部联赛合并去重后的 game[] */
+  if (parsed.pathname === '/proxy/games/all') {
+    try { return sendJson(res, 200, { ok: true, data: await allGames() }); }
+    catch (e) { return sendJson(res, 502, { ok: false, error: String(e && e.message || e) }); }
+  }
 
   /* 腾讯体育转发适配器：league=前端联赛ID；game 另需 mid=<联赛ID:比赛ID> */
   if (parsed.pathname === '/proxy/tencent/games') {
@@ -601,6 +1052,17 @@ const server = http.createServer(async (req, res) => {
       const g = await txGame(parsed.searchParams.get('league') || '', parsed.searchParams.get('mid') || '');
       return g ? sendJson(res, 200, { ok: true, data: g }) : sendJson(res, 404, { ok: false, error: 'game not found' });
     } catch (e) { return sendJson(res, 502, { ok: false, error: String(e && e.message || e) }); }
+  }
+
+  /* 懂球帝：足球积分榜 + 射手/助攻/射门榜（SSR HTML 解析） */
+  if (parsed.pathname === '/proxy/dongqiudi/league') {
+    try { return sendJson(res, 200, { ok: true, data: await dqLeague(parsed.searchParams.get('league') || '') }); }
+    catch (e) { return sendJson(res, 502, { ok: false, error: String(e && e.message || e) }); }
+  }
+  /* 直播吧：NBA 东西部排行 + 得分/篮板/助攻/抢断/盖帽榜（JSON） */
+  if (parsed.pathname === '/proxy/zhibo8/league') {
+    try { return sendJson(res, 200, { ok: true, data: await zbLeague(parsed.searchParams.get('league') || '') }); }
+    catch (e) { return sendJson(res, 502, { ok: false, error: String(e && e.message || e) }); }
   }
 
   const handler = routes[parsed.pathname];
